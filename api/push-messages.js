@@ -9,6 +9,7 @@ const COPY = {
     dayFallbackTitle: 'Workout planned today',
     dayRoutineSuffix: 'today',
     dayBody: "It's on your plan. Let's go 💪",
+    habitBody: 'Time for it. Tap to tick it off.',
   },
   'pt-BR': {
     restTitle: 'Descanso terminado 💪',
@@ -17,6 +18,7 @@ const COPY = {
     dayFallbackTitle: 'Treino planejado para hoje',
     dayRoutineSuffix: 'hoje',
     dayBody: 'Está no seu plano. Bora treinar 💪',
+    habitBody: 'Está na hora. Toque para marcar.',
   },
 };
 
@@ -49,6 +51,12 @@ export function restTimerPush(lang) {
 
 export function testPush(lang) {
   return { title: 'openGym', body: copyFor(lang).testBody, tag: 'test' };
+}
+
+// A daily habit's time (habits.js): its own name, its dose or a line saying it is time. One tag per
+// time, so two habits due together both stay in the tray.
+export function habitPush(lang, habit) {
+  return { title: habit.name, body: habit.dose || copyFor(lang).habitBody, tag: 'habit-' + habit.key };
 }
 
 export function dayReminderPush(lang, routine) {
