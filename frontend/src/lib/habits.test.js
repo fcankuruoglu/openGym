@@ -6,6 +6,7 @@ import * as Server from '../../../api/habits.js'
 import * as Stamps from '../../../api/sync-stamps.js'
 import {
   readHabit, habitsOf, withHabit, habitKey, slotsOn, withMark, stockLeft, daysLeft, habitNotifications, TIMES_MAX,
+  toggleTime, toggleDay, HABIT_TEMPLATES,
 } from './habits.js'
 import { mergeStates, STAMPED_MAPS } from './sync-merge.js'
 
@@ -115,5 +116,23 @@ describe('habits: the server copy', () => {
   it('skips a removed habit and a zone it cannot read', () => {
     expect(Server.habitsDue({ habits: { c: { _ts: 3 } } }, nowIn({ date: MON, hhmm: '08:00' }), 15)).toEqual([])
     expect(Server.habitsDue({ habits: { c: { ...creatine, tz: 'Bad/Zone' } } }, nowIn({ date: MON, hhmm: '08:00' }), 15)).toEqual([])
+  })
+})
+
+describe('habits: the editor helpers', () => {
+  it('a time preset goes in sorted and comes out again, but the last time stays', () => {
+    expect(toggleTime(['12:00'], '08:00')).toEqual(['08:00', '12:00'])
+    expect(toggleTime(['08:00', '12:00'], '08:00')).toEqual(['12:00'])
+    expect(toggleTime(['08:00'], '08:00')).toEqual(['08:00'])
+    expect(toggleTime(['01:00', '02:00', '03:00', '04:00', '05:00', '06:00'], '07:00')).toHaveLength(TIMES_MAX)
+  })
+  it('a day off from every day leaves the other six; all seven is every day again, the last one stays', () => {
+    expect(toggleDay([], 0)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(toggleDay([1, 2, 3, 4, 5, 6], 0)).toEqual([])
+    expect(toggleDay([1, 3], 5)).toEqual([1, 3, 5])
+    expect(toggleDay([1], 1)).toEqual([1])
+  })
+  it('every template reads as a valid habit', () => {
+    for (const tpl of HABIT_TEMPLATES) expect(readHabit(tpl), tpl.name).not.toBeNull()
   })
 })

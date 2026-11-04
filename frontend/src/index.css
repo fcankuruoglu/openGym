@@ -2381,6 +2381,12 @@ button.mchip{border:none;font:inherit;font-size:var(--fs-caption);cursor:pointer
 .habit-name small{color:var(--label-2)}
 .habit-row.done .habit-name,.habit-row.skip .habit-name{color:var(--label-3)}
 .habit-low{margin:12px 0 0;font-size:var(--fs-footnote);color:var(--red)}
+/* Settings: the habit editor's quick starts, time presets and weekdays (views/Habits.jsx) */
+.habit-chips{padding:12px 16px 4px}
+.habit-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:8px 16px 12px}
+.habit-days .chip{padding-inline:0;text-align:center}
+.habit-chips .chip:not(.on),.habit-days .chip:not(.on){background:var(--surface-2)}
+.habit-chips .chip,.habit-days .chip{text-transform:none}   /* names and words as written: no "Every Day", no "Hafta İçi" */
 .ch-mini .pbar{height:5px}
 .ch-note{display:flex;align-items:center;gap:6px;margin-top:14px}
 .ch-crown{color:var(--gold-ink)}
