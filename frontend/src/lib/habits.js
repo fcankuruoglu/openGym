@@ -63,6 +63,41 @@ export function withHabit(map, id, habit, now = Date.now()) {
   return { ...(isMap(map) ? map : {}), [id]: entry }
 }
 
+// The editor's quick starts. Names and doses are English keys, translated when one is picked, so
+// the habit is saved in the language it was made in.
+export const HABIT_TEMPLATES = [
+  { name: 'Creatine', dose: '5 g', times: ['08:00'] },
+  { name: 'Protein shake', dose: '30 g', times: ['17:00'] },
+  { name: 'Omega-3', dose: '1 capsule', times: ['08:00'] },
+  { name: 'Vitamin D3', dose: '1 capsule', times: ['08:00'] },
+  { name: 'Magnesium', dose: '1 capsule', times: ['22:00'] },
+  { name: 'Multivitamin', dose: '1 tablet', times: ['08:00'] },
+  { name: 'Water', dose: '500 ml', times: ['09:00', '12:00', '15:00', '18:00'] },
+]
+export const TIME_PRESETS = [
+  { label: 'Morning', time: '08:00' }, { label: 'Noon', time: '12:00' },
+  { label: 'Evening', time: '18:00' }, { label: 'Bedtime', time: '22:00' },
+]
+export const DAY_PRESETS = [
+  { label: 'Every day', days: [] }, { label: 'Weekdays', days: [1, 2, 3, 4, 5] }, { label: 'Weekend', days: [0, 6] },
+]
+
+/** `times` with `time` added (sorted, capped) or taken out; the last time stays. */
+export function toggleTime(times, time) {
+  if (times.includes(time)) return times.length > 1 ? times.filter(x => x !== time) : times
+  return [...times, time].sort().slice(0, TIMES_MAX)
+}
+
+/** `days` with weekday `d` switched. None means every day, so switching one off there leaves the other six. */
+export function toggleDay(days, d) {
+  const all = days.length ? days : [0, 1, 2, 3, 4, 5, 6]
+  const next = all.includes(d) ? all.filter(x => x !== d) : [...all, d].sort()
+  if (!next.length) return days   // the last day stays, as the last time does
+  return next.length === 7 ? [] : next
+}
+
+export const sameDays = (a, b) => a.length === b.length && a.every(x => b.includes(x))
+
 export const habitKey = (iso, id, time) => `${iso}|${id}|${time}`
 
 /** Whether `habit` (read) is on for the date `iso`. */

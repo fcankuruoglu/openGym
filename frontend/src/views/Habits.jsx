@@ -5,12 +5,15 @@ import { useState } from 'react'
 import { t } from '../lib/i18n.js'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
-import { Section, Row, Switch, Button, NumberField, MultiSelectRow } from '../components/ui.jsx'
+import { Section, Row, Switch, Button, NumberField } from '../components/ui.jsx'
 import Icon from '../components/Icon.jsx'
 import { confirmSheet } from '../sheets.jsx'
 import { DAYN, uid, weekOrder, weekStartOf } from '../lib/format.js'
 import { MOBILE, syncReminder } from '../lib/mobile.js'
-import { habitsOf, withHabit, stockLeft, daysLeft, HABIT_MAX, TIMES_MAX, NAME_MAX, DOSE_MAX } from '../lib/habits.js'
+import {
+  habitsOf, withHabit, stockLeft, daysLeft, toggleTime, toggleDay, sameDays,
+  HABIT_MAX, TIMES_MAX, NAME_MAX, DOSE_MAX, HABIT_TEMPLATES, TIME_PRESETS, DAY_PRESETS,
+} from '../lib/habits.js'
 
 const update = fn => useStore.getState().update(fn)
 
@@ -64,8 +67,17 @@ function HabitEditor({ S, id, close }) {
     onConfirm: () => { update(s => { s.habits = withHabit(s.habits, id, null) }); close() },
   })
   const valid = d.name.trim() && d.times.length > 0
+  // A quick start fills the form in this language; everything stays editable after.
+  const pick = tpl => set({ name: t(tpl.name), dose: t(tpl.dose), times: tpl.times })
+  const picked = tpl => d.name === t(tpl.name)
 
   return <>
+    {!old && <Section title={t('Quick start')} footer={t('Pick one to fill in the form, then change what you like.')}>
+      <div className="chips wrap habit-chips">
+        {HABIT_TEMPLATES.map(tpl => <button key={tpl.name} type="button" className={'chip' + (picked(tpl) ? ' on' : '')}
+          aria-pressed={picked(tpl)} onClick={() => pick(tpl)}>{t(tpl.name)}</button>)}
+      </div>
+    </Section>}
     <Section>
       <label className="lrow gym-in-row">
         <span className="lrow-i" style={{ '--tint': 'var(--orange)' }}><Icon name="pencil" /></span>
@@ -81,14 +93,28 @@ function HabitEditor({ S, id, close }) {
       </label>
     </Section>
     <Section title={t('Times')}>
+      <div className="chips wrap habit-chips">
+        {TIME_PRESETS.map(p => <button key={p.time} type="button" className={'chip' + (d.times.includes(p.time) ? ' on' : '')}
+          aria-pressed={d.times.includes(p.time)} onClick={() => set({ times: toggleTime(d.times, p.time) })}>{t(p.label)} <span className="dim">{p.time}</span></button>)}
+      </div>
       {d.times.map((time, i) => <Row key={i} icon="clock" iconTint="var(--purple)" title={t('At')}>
         <input type="time" className="timef" value={time} aria-label={t('At')} onChange={e => e.target.value && setTime(i, e.target.value)} />
         {d.times.length > 1 && <Button size="sm" icon="xmark" aria-label={t('Remove')} onClick={() => set({ times: d.times.filter((_, j) => j !== i) })} />}
       </Row>)}
       {d.times.length < TIMES_MAX && <Row icon="plusCircle" iconTint="var(--purple)" title={t('Add a time')} onClick={() => set({ times: [...d.times, '12:00'] })} />}
-      <MultiSelectRow icon="calendar" iconTint="var(--orange)" title={t('Days')} noneLabel={t('Every day')} doneLabel={t('Done')}
-        values={d.days} options={weekOrder(weekStartOf(S)).map(x => ({ value: x, label: t(DAYN[x]) }))}
-        onToggle={x => setD(v => ({ ...v, days: v.days.includes(x) ? v.days.filter(y => y !== x) : [...v.days, x] }))} />
+    </Section>
+    <Section title={t('Days')}>
+      <div className="chips wrap habit-chips">
+        {DAY_PRESETS.map(p => <button key={p.label} type="button" className={'chip' + (sameDays(d.days, p.days) ? ' on' : '')}
+          aria-pressed={sameDays(d.days, p.days)} onClick={() => set({ days: p.days })}>{t(p.label)}</button>)}
+      </div>
+      <div className="habit-days" role="group" aria-label={t('Days')}>
+        {weekOrder(weekStartOf(S)).map(x => {
+          const on = !d.days.length || d.days.includes(x)
+          return <button key={x} type="button" className={'chip' + (on ? ' on' : '')} aria-pressed={on} aria-label={t(DAYN[x])}
+            onClick={() => set({ days: toggleDay(d.days, x) })}>{t(DAYN[x]).slice(0, 2)}</button>
+        })}
+      </div>
     </Section>
     <Section title={t('Stock')} footer={d.counted ? t('Each tick takes one dose off. Bought more? Type in what you have now.') : null}>
       <Row icon="clipboard" iconTint="var(--blue)" title={t('Count what I have left')}>
