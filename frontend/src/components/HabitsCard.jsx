@@ -16,7 +16,7 @@ export default function HabitsCard({ S }) {
   const mark = (key, m) => useStore.getState().update(s => { s.habitLog = withMark(s.habitLog, key, m) })
   const done = slots.filter(x => x.mark).length
   const low = habitsOf(S).map(h => ({ h, left: daysLeft(S, h.id) })).filter(x => x.left != null && x.left <= LOW_DAYS)
-  return <div className="card habits-card">
+  return <div className="card tap-host habits-card">
     <CardHead icon="checkCircle" tint="var(--green)" title={t('Daily habits')} sub={`${done}/${slots.length}`}
       open={{ onClick: () => nav('/settings/habits') }} />
     <div className="habit-list">
