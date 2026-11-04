@@ -205,6 +205,10 @@ export const DEF = {
   // (lib/ex-unit.js, issue #657). Shown and typed in that unit, still stored in the profile's.
   // Absent or null = the profile's unit. Stamped like dbLoad.
   exUnit: {},
+  // Daily habits (supplements, water, …) and their ticks per date and time (lib/habits.js).
+  // Stamped maps like dayNotes; the stock is worked out from the ticks, never stored as a count.
+  habits: {},
+  habitLog: {},
   // Gym check-in cards (see views/CheckIn.jsx). Each is a membership
   // code shown as a QR/barcode at the gym's turnstile — added by typing it, importing a photo
   // of the card, or scanning it. We only ever keep the code's VALUE, never a photo: the image

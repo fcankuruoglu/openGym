@@ -34,4 +34,12 @@ describe('syncReminder and the background check', () => {
     expect(mocks.arm.mock.calls.map(c => c[1])).toEqual([[], []])
     expect(mocks.schedule).not.toHaveBeenCalled()
   })
+  it('daily habits are scheduled with the reminder off, and never handed to the check', async () => {
+    const state = { ...S({ on: false }), habits: { c: { name: 'Creatine', times: ['08:00'], _ts: 1 } }, habitLog: {} }
+    expect(await syncReminder(state)).toBe(true)
+    const scheduled = mocks.schedule.mock.calls[0][0].notifications
+    expect(scheduled.length).toBeGreaterThan(0)
+    expect(scheduled.every(n => n.title === 'Creatine' && n.id >= 3000)).toBe(true)
+    expect(mocks.arm).toHaveBeenCalledWith(state, [])
+  })
 })

@@ -2373,6 +2373,14 @@ button.mchip{border:none;font:inherit;font-size:var(--fs-caption);cursor:pointer
 .ch-bar{margin-top:7px}
 .ch-row.done .pbar i,.ch-mini .done i{background:var(--win-ink)}
 .ch-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}
+/* Home: today's daily habits (components/HabitsCard.jsx) */
+.habit-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.habit-row{display:flex;align-items:center;gap:10px;min-height:44px}
+.habit-time{flex:none;font-size:var(--fs-footnote);font-variant-numeric:tabular-nums;color:var(--label-2)}
+.habit-name{flex:1;min-width:0;font-size:var(--fs-subhead);text-wrap:pretty}
+.habit-name small{color:var(--label-2)}
+.habit-row.done .habit-name,.habit-row.skip .habit-name{color:var(--label-3)}
+.habit-low{margin:12px 0 0;font-size:var(--fs-footnote);color:var(--red)}
 .ch-mini .pbar{height:5px}
 .ch-note{display:flex;align-items:center;gap:6px;margin-top:14px}
 .ch-crown{color:var(--gold-ink)}

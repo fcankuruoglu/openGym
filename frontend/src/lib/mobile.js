@@ -15,6 +15,7 @@ import { effectiveRoutineIds } from './history.js'
 import { NUDGE_COPY, lineIndex, nudgeFor, nudgeMinute, toneOf } from './nudge.js'
 import { excusedOn } from './day-notes.js'
 import { stateJson } from './state-json.js'
+import { habitNotifications } from './habits.js'
 
 export const MOBILE = import.meta.env.VITE_MOBILE === '1'
 
@@ -233,6 +234,10 @@ export function buildNudgeNotifications(S, now = new Date()) {
 // the bounded window. Cheap enough to run after any state change — the plan or the reminder time
 // may just have been edited. `interactive` gates the OS permission prompt to the Settings toggle;
 // a background resync never pops a dialog.
+// Daily habits (lib/habits.js) get the next HABIT_NOTES open times, ids from HABIT_ID_BASE: iOS
+// keeps 64 pending for the whole app, and the workout reminders and nudges use the rest.
+const HABIT_ID_BASE = 3000
+const HABIT_NOTES = 20
 export async function syncReminder(S, interactive = false) {
   // The gym reminder (lib/gym-reminder.js) decides on the phone whether to go off, from what it
   // was last told about today: told again here, after every save and on every return to the app.
@@ -243,16 +248,18 @@ export async function syncReminder(S, interactive = false) {
       ...LEGACY_REMINDER_IDS,
       ...Array.from({ length: REMINDER_WINDOW_DAYS }, (_, d) => ({ id: REMINDER_ID_BASE + d })),
       ...Array.from({ length: NUDGE_WINDOW_DAYS }, (_, d) => ({ id: NUDGE_ID_BASE + d })),
+      ...Array.from({ length: HABIT_NOTES }, (_, i) => ({ id: HABIT_ID_BASE + i })),
     ] }).catch(() => {})
     const r = S.reminder
     // The background check (lib/nudge-check.js) follows what is scheduled: nothing, nothing to check.
     const check = notifications => import('./nudge-check.js').then(m => m.armNudgeCheck(S, notifications)).catch(() => {})
-    if (!r?.on) { await check([]); return true }
+    const habits = habitNotifications(S, { max: HABIT_NOTES, idBase: HABIT_ID_BASE, tr: t })
+    if (!r?.on && !habits.length) { await check([]); return true }
     let perm = await LocalNotifications.checkPermissions()
     if (perm.display !== 'granted' && interactive) perm = await LocalNotifications.requestPermissions()
     if (perm.display !== 'granted') { await check([]); return false }
-    const notifications = [...buildReminderNotifications(S), ...buildNudgeNotifications(S)]
-    if (notifications.length) await LocalNotifications.schedule({ notifications })
+    const notifications = r?.on ? [...buildReminderNotifications(S), ...buildNudgeNotifications(S)] : []
+    if (notifications.length || habits.length) await LocalNotifications.schedule({ notifications: [...notifications, ...habits] })
     await check(notifications)
     return true
   } catch (e) { return false }

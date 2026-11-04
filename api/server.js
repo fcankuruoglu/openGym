@@ -16,7 +16,7 @@ import * as coachJobs from './coach/jobs.js';
 import { coachRoutes } from './coach/routes.js';
 import { startCadence } from './coach/cadence.js';
 import { startWarmup } from './coach/warmup.js';
-import { dayReminderPush, nudgePush, restTimerPush, testPush } from './push-messages.js';
+import { dayReminderPush, habitPush, nudgePush, restTimerPush, testPush } from './push-messages.js';
 import { verifyError, isMisconfigured, originHint } from './verify-error.js';
 import {
   hashPassword, verifyPassword, needsRehash, passwordProblem, passwordLength, nameKey, BusyError,
@@ -42,6 +42,7 @@ import { ipv6Groups, guardedLookup, pushEndpointError, MAX_PUSH_ENDPOINT } from 
 import { createIntegrations } from './integrations/index.js';
 import { integrationRoutes } from './integrations/routes.js';
 import { excusedOn, nudgeFor, nudgeWindowOpen, toneOf } from './nudge.js';
+import { habitsDue } from './habits.js';
 import { wrappedPushYear, wrappedSummary, wrappedPushOwed, wrappedPush } from './wrapped.js';
 
 const PORT = +(process.env.PORT || 3000);
@@ -483,6 +484,7 @@ function stateSummary(uid) {
     consent: !!S?.coach?.consent?.agreedAt,
     settled: '',   // a local date the reminder was found to owe nothing on, for this file
     wrapped: wrappedSummary(S),   // the December push (wrapped.js): a flag, a year, a few years
+    habits: !!S?.habits && typeof S.habits === 'object' && Object.keys(S.habits).length > 0,
   };
   stateSummaries.set(uid, sum);
   return sum;
@@ -497,6 +499,23 @@ function wrappedTick(user, sum, year) {
   saveDb();
   sendPush(user.id, wrappedPush(sum.wrapped.lang, year));
 }
+// Daily habits (habits.js): a push for each time of a habit, on that habit's own clock, up to
+// REMINDER_WINDOW_MIN late and only while it is neither ticked nor skipped. Each one goes out once:
+// its key (date, habit, time) is kept in db.json (`user.habitSent`) before the send, the newest
+// HABIT_SENT_MAX of them, far more than a day can hold. Independent of the workout reminder.
+const HABIT_SENT_MAX = 200;
+function habitTick(user) {
+  const S = readStateCached(user.id);
+  const sent = new Set(Array.isArray(user.habitSent) ? user.habitSent : []);
+  const due = habitsDue(S, userNow, REMINDER_WINDOW_MIN).filter(h => !sent.has(h.key));
+  if (!due.length) return;
+  user.habitSent = [...sent, ...due.map(h => h.key)].slice(-HABIT_SENT_MAX);
+  saveDb();
+  for (const h of due) {
+    console.log('habit firing', user.id, h.key);
+    sendPush(user.id, habitPush(S.lang, h));
+  }
+}
 setInterval(() => {
   // Server time, read through Date.now() so the tests' clock moves it too.
   const wrappedYear = wrappedPushYear(new Date(Date.now()));
@@ -509,6 +528,7 @@ setInterval(() => {
     try {
       const sum = stateSummary(user.id);
       if (wrappedYear && sum && user.wrappedPush !== wrappedYear) wrappedTick(user, sum, wrappedYear);
+      if (sum?.habits) habitTick(user);
       if (!sum?.rem.on) continue;
       const now = userNow(sum.rem.tz || 'UTC');
       if (!now) continue;
