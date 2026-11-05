@@ -841,11 +841,14 @@ function ExerciseBlock({ entryIdx, compact, dense, editing, onToggle, onToggleSi
         // A timed per-side hold is an L row and an R row that delete and copy as one set, so they
         // also swipe as one: the L row's turn draws both, the R row's draws neither.
         const [spanStart, spanCount] = setSpanAt(entry.sets, i)
+        // Where a back-off plan's lighter sets begin (lib/backoff.js), so they read apart from the top sets.
+        const backoffHere = !warm && entry.target?.backoffStep > 0 && phaseNum === backoffShapeOf(entry.target).tops + 1
         const pairHead = spanCount === 2 && spanStart === i
         const pairTail = spanCount === 2 && spanStart !== i
         return <div key={i}>
           {isFirstWarmup && <div className="setph">{t('Warm-up')}</div>}
           {!warm && warmBefore && <div className="setsep" />}
+          {backoffHere && <div className="setph">{t('Back-off sets')}</div>}
           {/* A pyramid's Max set: the reps are what you managed, not a number to hit. */}
           {/* With the record to beat at this set's weight or heavier, from before this session. */}
           {!warm && s.max && <div className="setph">{t('Max: as many reps as you can')}{(() => {

@@ -246,6 +246,12 @@ describe('top sets and a back-off by share', () => {
     const back = parsePlan({ ...file, routines: [{ ...file.routines[0], ex: [{ ...file.routines[0].ex[0], backoffPct: 99 }] }] }, 'kg')
     expect(back.routines[0].ex[0]).toMatchObject({ backoffTops: 2, backoffPct: 50, backoffReps: 10 })
   })
+  it('opens the back-off set at its own reps before any weight is known, and the weight follows the top set', () => {
+    const empty = buildSessionEntries({ unit: 'kg', exWeights: {}, routines: [{ ...routine, ex: [{ ...cfg, weight: 0 }] }], workouts: [] }, routine)[0]
+    expect(work(empty).map(s => s.r)).toEqual([8, 8, 10])
+    const typed = cascadeWeight(empty.sets, empty.sets.indexOf(work(empty)[0]), 60, undefined, empty.target.backoffStep, backoffShapeOf(empty.target))
+    expect(work({ sets: typed }).slice(1).map(s => [s.w, s.r])).toEqual([[60, 8], [50, 10]])
+  })
   it('cascades a top set edit over the sets under it, and a back-off edit onto the ones after', () => {
     const rows = [{ w: 60, r: 8 }, { w: 60, r: 8 }, { w: 50, r: 10 }, { w: 50, r: 10 }]
     expect(cascadeWeight(rows, 0, 70, undefined, 2.5, shape).map(r => r.w)).toEqual([60, 70, 57.5, 57.5])
