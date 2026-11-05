@@ -4,6 +4,15 @@
 import pt from './pt.js'
 
 export const PT_BR_OVERRIDES = {
+  'Tempo': 'Tempo',
+  'Tempo {0}': 'Tempo {0}',
+  'top set {0}': 'série principal {0}',
+  'Top set RPE': 'RPE da série principal',
+  'Top set RIR': 'RIR da série principal',
+  'The top sets stay at the weight above, the rest are lighter.': 'As séries principais ficam no peso acima, as outras são mais leves.',
+  'Top sets': 'Séries principais',
+  'Lighter by (%)': 'Mais leve em (%)',
+  'Back-off reps': 'Reps descendentes',
   'The search finds it by these too. Separate them with commas.': 'A busca também encontra o exercício por estes. Separe com vírgulas.',
   'Save names': 'Salvar nomes',
   'Handy when you compare with another app. Records ignore warm-ups either way.': 'Ajuda quando você compara com outro app. Os recordes ignoram o aquecimento de qualquer jeito.',

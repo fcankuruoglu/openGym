@@ -59,7 +59,8 @@ import { relativeSeries } from './lib/relative-strength.js'
 import { isBellEx, dbLoadOf, dbLoadFor, withDbLoad, entryDbLoad, currentDbLoad, isOneArm, dumbbellsOf, ownsDumbbells, withDumbbells, ownsNoDumbbells, withNoDumbbells, presetWeights, cleanWeights, canHaveStack, stackOf, withStack, stackFromStep } from './lib/dumbbells.js'
 import { policyFor, profileRule, defaultIncrement, POLICIES_FOR, POLICY_NAME, POLICY_DESC, MAX_BW_SETS, MAX_TRIPLE_SETS } from './lib/progression.js'
 import { normalizeRepRange } from './lib/rep-range.js'
-import { isBackoff, backoffWeights } from './lib/backoff.js'
+import { isBackoff, backoffWeights, backoffShapeOf, backoffShapeFields, BACKOFF_PCT_MAX } from './lib/backoff.js'
+import { cueFields, topRpeOf, TOP_RPE_MIN, TOP_RPE_MAX } from './lib/cues.js'
 import { isPyramid, normalizePyramid, normalizePyramidRest, normalizePyramidWeight, pyramidFromFlat, flatFromPyramid, pyramidLabel, PYRAMID_MAX, MAX_PYRAMID_SETS, PYRAMID_PRESETS } from './lib/pyramid.js'
 import { MOBILE, shareExport, shareExportBlob } from './lib/mobile.js'
 import { speedUnitOf, toSpeed, fromSpeed } from './lib/speed.js'
@@ -2063,8 +2064,10 @@ function ProgressionFields({ ex, mode, c, setC, routine, unit, perSide, bw, fall
   const weightless = weightlessOf(c, mode, bw)
   const invalid = !progressionStepIsValid(inc, active, backoff, weightless)
   // "26 → 24 → 22 kg": what the sets will open at, from the weight and step typed above.
+  const workSets = Math.max(1, Math.round(c.sets) || 1)
+  const shape = backoffShapeOf(c)
   const preview = backoff && c.weight > 0 && inc > 0
-    ? backoffWeights(c.weight, Math.max(1, Math.round(c.sets) || 1), inc).map(fmtNum).join(' → ') + ' ' + unit
+    ? backoffWeights(c.weight, workSets, inc, shape).map(fmtNum).join(' → ') + ' ' + unit
     : ''
   const stride = mode === 'reps' && perSide ? 2 : 1
   const range = climbsRange(active) ? normalizeRepRange(c.reps, c.repsMin, stride) : null
@@ -2128,10 +2131,20 @@ function ProgressionFields({ ex, mode, c, setC, routine, unit, perSide, bw, fall
     {canBackoff && <>
       <div className="sect-b" style={{ marginBottom: 8 }}>
         <Row icon="steps" iconTint="var(--acc)" title={t('Back-off sets')}
-          subtitle={t('Each set one step lighter than the one before. The weight above is the first set.')}>
+          subtitle={backoff && (shape.tops > 1 || shape.pct) ? t('The top sets stay at the weight above, the rest are lighter.') : t('Each set one step lighter than the one before. The weight above is the first set.')}>
           <Switch checked={backoff} onChange={v => setC(x => ({ ...x, backoff: v || undefined }))} />
         </Row>
       </div>
+      {/* "2 top sets + 1 back-off": how many sets stay at the top weight, how much lighter the
+          rest are (0 keeps one step per set) and their own reps (0 keeps the plan's). */}
+      {backoff && <div className="row cfgrow" style={{ marginBottom: 12 }}>
+        <Stepper label={t('Top sets')} value={shape.tops} step={1} min={1} max={Math.max(1, workSets - 1)} decimal={false}
+          onChange={v => setC(x => ({ ...x, backoffTops: v > 1 ? v : undefined }))} />
+        <Stepper label={t('Lighter by (%)')} value={shape.pct} step={5} min={0} max={BACKOFF_PCT_MAX} decimal={false}
+          onChange={v => setC(x => ({ ...x, backoffPct: v > 0 ? v : undefined }))} />
+        <Stepper label={t('Back-off reps')} value={shape.reps} step={1} min={0} decimal={false}
+          onChange={v => setC(x => ({ ...x, backoffReps: v > 0 ? v : undefined }))} />
+      </div>}
       <div className="small dim" style={{ marginBottom: 18 }}>
         {backoff
           ? (preview ? t('Sets open at {0}. The first set goes up when every set reaches its reps, and the rest follow it.', preview) : t('The first set goes up when every set reaches its reps, and the rest follow it.'))
@@ -2269,6 +2282,8 @@ function ExConfig({ ex, existing, onSave, onDelete, onReplace, close, routine, i
     // Mode-independent, so it is spread in below rather than folded into `flags`.
     const note = (c.note || '').trim().slice(0, 500)
     const withNote = note ? { note } : {}
+    // Tempo and top-set RPE (lib/cues.js), written only when set; the RPE only on rep work.
+    const withCues = cueFields(mode === 'reps' ? c : { tempo: c.tempo })
     // Only written when there are any, so a plan that never asked for warm-ups keeps the exact
     // shape it had — and reads back as 0 either way (buildSets).
     // The slot's own warm-up choice (lib/warmup-ramp.js): Auto, a block of its own or none, written
@@ -2306,7 +2321,7 @@ function ExConfig({ ex, existing, onSave, onDelete, onReplace, close, routine, i
     // The treadmill's grade, only when it has one, so a flat slot keeps the shape it had.
     const incline = clampIncline(c.incline)
     if (cardio) saveAs({ sets, min: Math.max(1, Math.round(c.min) || 20), speed: Math.max(0, c.speed || 8), ...(incline > 0 ? { incline } : {}), ...withNote, ...withRest, ...withSubs })
-    else if (mode === 'time') saveAs({ sets, mode: 'time', sec: Math.max(1, Math.round(c.sec) || 45), weight: Math.max(0, c.weight || 0), ...flags, ...(perSide ? { side: true } : {}), ...prog, ...withNote, ...withWarmups, ...withRest, ...withSetRests, ...withMeant, ...withFailure, ...withSubs })
+    else if (mode === 'time') saveAs({ sets, mode: 'time', sec: Math.max(1, Math.round(c.sec) || 45), weight: Math.max(0, c.weight || 0), ...flags, ...(perSide ? { side: true } : {}), ...prog, ...withNote, ...withCues, ...withWarmups, ...withRest, ...withSetRests, ...withMeant, ...withFailure, ...withSubs })
     else {
       // A unilateral target is stored even: the split has to divide, and a typed 15 would
       // otherwise plan seven reps on one side and eight on the other, every session.
@@ -2318,7 +2333,7 @@ function ExConfig({ ex, existing, onSave, onDelete, onReplace, close, routine, i
         range = normalizeRepRange(reps, c.repsMin, stride)
         reps = range.reps
       }
-      const out = { sets, mode: 'reps', reps, weight: Math.max(0, c.weight || 0), ...flags, ...(perSide ? { side: true } : {}), ...prog, ...withNote, ...withWarmups, ...withRest, ...withSetRests, ...withMeant, ...withSubs }
+      const out = { sets, mode: 'reps', reps, weight: Math.max(0, c.weight || 0), ...flags, ...(perSide ? { side: true } : {}), ...prog, ...withNote, ...withCues, ...withWarmups, ...withRest, ...withSetRests, ...withMeant, ...withSubs }
       // The list is the prescription; sets and reps follow it, so everything that reads the
       // flat target (a config sheet reopened with the toggle off, older builds) still makes sense.
       const list = pyramid ? normalizePyramid(c.pyramid, stride) : []
@@ -2337,7 +2352,7 @@ function ExConfig({ ex, existing, onSave, onDelete, onReplace, close, routine, i
       // decided here, in the plan, not re-decided live each time you train it.
       if (!list.length && c.intensifier && c.intensifier.type) out.intensifier = intensifierToSave(c.intensifier)
       // Back-off sets: written only when on, and only where the sheet offered them.
-      if (c.backoff === true && backoffOffered(out, 'reps', ex, bw) && isBackoff({ ...out, backoff: true })) out.backoff = true
+      if (c.backoff === true && backoffOffered(out, 'reps', ex, bw) && isBackoff({ ...out, backoff: true })) Object.assign(out, { backoff: true }, backoffShapeFields(c))
       // A pyramid has its own Max set for this, so the flag is not offered (or kept) there.
       if (!list.length) Object.assign(out, withFailure)
       saveAs(out)
@@ -2667,6 +2682,17 @@ function ExConfig({ ex, existing, onSave, onDelete, onReplace, close, routine, i
     {pyramid
       ? <div className="small dim" style={{ marginBottom: 18 }}>{t('Weight is up to you: pyramid sets are not progressed automatically.')}</div>
       : <ProgressionFields ex={ex} mode={mode} c={c} setC={setC} routine={routine} unit={st.unit} perSide={perSide} bw={bw} fallback={profileRule(st)} freestyle={routine ? false : freestyle} />}
+    {/* How each rep is lifted and how hard the top set should feel (lib/cues.js): both optional. */}
+    {!cardio && <div className="row cfgrow" style={{ marginBottom: 18 }}>
+      <label className="stp-w"><span className="stp-l">{t('Tempo')}</span>
+        <TextField className="cue-tempo" inputMode="text" maxLength={4} placeholder="2101" value={c.tempo || ''} aria-label={t('Tempo')}
+          onChange={e => setC(x => ({ ...x, tempo: e.target.value.toUpperCase().replace(/[^0-9X]/g, '') || undefined }))} />
+      </label>
+      {mode === 'reps' && <Stepper label={effortOf(st) === 'rir' ? t('Top set RIR') : t('Top set RPE')} value={topRpeOf(c)} step={0.5}
+        min={0} max={TOP_RPE_MAX} display={topRpeOf(c) ? (effortOf(st) === 'rir' ? fmtNum(10 - topRpeOf(c)) : null) : t('Off')}
+        onStep={(v, step, dir) => { if (!v) return dir > 0 ? 8 : 0; const n = v + (effortOf(st) === 'rir' ? -dir : dir) * step; return n < TOP_RPE_MIN || n > TOP_RPE_MAX ? (dir < 0 ? 0 : v) : n }}
+        onChange={v => setC(x => ({ ...x, topRpe: v >= TOP_RPE_MIN ? v : undefined }))} />}
+    </div>}
     <textarea className="input" rows={3} maxLength={500} style={{ marginBottom: 18 }}
       placeholder={t('Note (optional): loading cues, "bar only, then +1 plate/side each set", anything worth remembering')}
       value={c.note || ''} onChange={e => setC(x => ({ ...x, note: e.target.value }))} />

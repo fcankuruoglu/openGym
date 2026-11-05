@@ -7,7 +7,7 @@ import { hasIncline, inclineFrom } from './incline.js'
 import { isCardio, isHold, isOneLimb, isBodyweightEq, isAssisted, betterWeight } from './exercises.js'
 import { barWeightFor } from './bar.js'
 import { phaseForSet, modeForSet, modeForEntry, isWarmupRow, isFailureSet, isDropSet, isRestPauseSet, normalizeMode, completedVolumeOf, hasCompletedWork, nextDropWeight, splitBurstReps, makeSideSet, isSideSet, syncSideAggregate, WEIGHT_ORIGIN_MANUAL, dropsOf, clustersOf } from './workout-model.js'
-import { backoffAt, backoffStepOf, backoffWeights } from './backoff.js'
+import { backoffAfter, backoffShapeOf, backoffStepOf, backoffWeights, isBackoff } from './backoff.js'
 import { dbLoadOf, bellsIn, volumeFactor, historyAs, ownedFloor } from './dumbbells.js'
 import { isRungRow, rungWeight } from './warmup-snap.js'
 import { bodyLoadOf, bodyweightFor, countsBodyweight } from './bw-load.js'
@@ -245,6 +245,11 @@ export function setsRepsOf(cfg) {
   if (isPyramid(cfg)) return pyramidLabel(cfg.pyramid)
   // Triple progression's set range reads as a range too: "3–5 × 8–12".
   const sets = cfg.setsMax > n ? `${n}–${cfg.setsMax}` : n
+  // Top sets and back-off sets of their own shape read apart: "2 × 8 + 1 × 10 (−15%)".
+  const bo = isBackoff(cfg) ? backoffShapeOf(cfg) : null
+  if (bo && (bo.tops > 1 || bo.reps || bo.pct) && n > bo.tops) {
+    return `${bo.tops} × ${repsOf(cfg)} + ${n - bo.tops} × ${bo.reps || repsOf(cfg)}` + (bo.pct ? ` (−${bo.pct}%)` : '')
+  }
   return `${sets} × ${repsOf(cfg)}`
 }
 
@@ -257,7 +262,7 @@ export function exLine(cfg, unit, speedUnit) {
   // Back-off sets read as the sequence they open at: "3 × 6 · 26 → 24 → 22 kg".
   const backoff = mode === 'reps' && cfg.weight > 0 ? backoffStepOf(cfg, unit) : 0
   const load = !cfg.weight ? ''
-    : backoff ? ' · ' + (isBw(cfg) ? '+' : '') + backoffWeights(cfg.weight, n, backoff).map(fmtNum).join(' → ') + ' ' + unit
+    : backoff ? ' · ' + (isBw(cfg) ? '+' : '') + backoffWeights(cfg.weight, n, backoff, backoffShapeOf(cfg)).map(fmtNum).join(' → ') + ' ' + unit
       : ' · ' + (isBw(cfg) ? '+' : '') + fmtNum(cfg.weight) + ' ' + unit
   if (mode === 'cardio') return `${n} × ${cfg.min || 20} min @ ${fmtSpeed(cfg.speed || 8, speedUnit)}` + (hasIncline(cfg) ? ' · ' + t('{0}% incline', fmtNum(Number(cfg.incline))) : '')
   // A timed hold has no rep count to spell a split out of ("8/side" below) — "per side" says it
@@ -967,19 +972,22 @@ export { streakWeeks } from './streak.js'
  *
  * `backoffStep` (an entry built with back-off sets, lib/backoff.js): each later work row lands
  * one more step below the edited one rather than at the same load, so 26 → 27.5 on the top set
- * makes the back-off sets 25.5 and 23.5, not 27.5 three times.
+ * makes the back-off sets 25.5 and 23.5, not 27.5 three times. `shape` is the entry's
+ * backoffShapeOf: an edit to a top set rebuilds the sets under it, one to a back-off set carries on.
  */
-export function cascadeWeight(rows, from, value, side, backoffStep = 0) {
+export function cascadeWeight(rows, from, value, side, backoffStep = 0, shape) {
   const source = rows[from]
   if (!source || isWarmupRow(source)) return rows.slice()
   const sides = isSideSet(source) ? (side ? [side] : ['L', 'R']) : null
   const next = rows.slice()
   const stepDown = backoffStep > 0 && value != null
+  // The edited row's place among the work sets, so a top set and a back-off set cascade apart.
+  const a = rows.slice(0, from).filter(r => !isWarmupRow(r)).length
   let k = 0
   const setWeight = row => {
     const out = { ...row }
     if (value == null) delete out.w
-    else out.w = stepDown ? backoffAt(value, k, backoffStep) : value
+    else out.w = stepDown ? backoffAfter(value, a, a + k, backoffStep, shape) : value
     return out
   }
   const setSideWeight = (row, key) => {

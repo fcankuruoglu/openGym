@@ -21,7 +21,8 @@ import { EXIDX, isAssisted, isLoadedEq, defaultIncrement } from './exercises.js'
 import { isWarmupRow, isSideSet, syncSideAggregate, makeSideSet } from './workout-model.js'
 import { normalizeRepRange } from './rep-range.js'
 import { isPyramid } from './pyramid.js'
-import { backoffAt } from './backoff.js'
+import { backoffAt, backoffShapeOf } from './backoff.js'
+import { topSetTooHard } from './cues.js'
 import { ownedWeightsFor, ownedKindFor, ownedUp, ownedDeload, ownedAround } from './dumbbells.js'
 
 export const POLICIES = ['off', 'linear', 'greyskull', 'double', 'triple', 'time']
@@ -312,15 +313,20 @@ export function readSession(entry, fallback) {
   // built with back-off sets carries the step; every other session reads exactly as before.
   const step = entry && entry.target ? Number(entry.target.backoffStep) || 0 : 0
   const top = step > 0 && sets.length ? Number(sets[0].w) || 0 : 0
-  const heavyEnough = (s, k) => !(top > 0) || k === 0 || (Number(s.w) || 0) >= backoffAt(top, k, step) - 0.05
+  // A plan with several top sets, a drop by share or back-off reps of its own (backoffShapeOf)
+  // holds each set to that shape: a back-off set is graded by its own reps.
+  const shape = step > 0 ? backoffShapeOf(target) : null
+  const heavyEnough = (s, k) => !(top > 0) || k === 0 || (Number(s.w) || 0) >= backoffAt(top, k, step, shape) - 0.05
   const reps = sets.map((s, k) => (s.done && heavyEnough(s, k) ? (s.r || 0) : 0))
+  const rowGoal = k => (shape?.reps && k >= shape.tops ? shape.reps : rowGoals ? rowGoals[k] ?? goal : goal)
   return {
     mode, target, goal, reps,
     weight: loadOf(entry, sets),
     count: reps.length,                                   // the dimension bodyweight work grows (#33)
     low: reps.length ? Math.min(...reps) : 0,
     amrap: reps.length ? reps[reps.length - 1] : 0,       // Greyskull's final set
-    ok: goal > 0 && enough && reps.length > 0 && reps.every((r, k) => r >= (rowGoals ? rowGoals[k] ?? goal : goal))
+    // A top set rated a point or more harder than the slot's target RPE (lib/cues.js) holds the weight.
+    ok: goal > 0 && enough && reps.length > 0 && reps.every((r, k) => r >= rowGoal(k)) && !topSetTooHard(target, sets[0])
   }
 }
 

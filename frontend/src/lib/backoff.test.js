@@ -1,10 +1,11 @@
 // Back-off sets (lib/backoff.js): the top set is planned and progressed, every set after it is
 // one step lighter, and the sequence only moves up when every planned set reached its target.
 import { describe, it, expect } from 'vitest'
-import { isBackoff, backoffAt, backoffWeights, applyBackoff } from './backoff.js'
+import { isBackoff, backoffAt, backoffWeights, applyBackoff, backoffShapeOf, backoffShapeFields } from './backoff.js'
 import { buildSessionEntries } from './session-start.js'
 import { readSession, nextPrescription } from './progression.js'
 import { cascadeWeight } from './history.js'
+import { buildPlanBundle, parsePlan } from './plan-share.js'
 import { isWarmupRow, makeSideSet } from './workout-model.js'
 
 const LIFT = '0025'
@@ -208,5 +209,52 @@ describe('nextPrescription with back-off', () => {
     const p = nextPrescription(S, cfg)
     expect(p.kind).toBe('up')
     expect(p.weight).toBe(28)
+  })
+})
+
+// "2 top sets + 1 back-off": several sets at the top weight, the rest a share lighter at reps of
+// their own, built, graded, cascaded and shared the same way as the one-step sequence.
+describe('top sets and a back-off by share', () => {
+  const shape = { tops: 2, pct: 15, reps: 10 }
+  it('keeps the top sets, drops the rest by the share, rounded down to the step', () => {
+    expect(backoffWeights(60, 3, 2.5, shape)).toEqual([60, 60, 50])
+    expect(backoffWeights(60, 4, 2.5, { tops: 2 })).toEqual([60, 60, 57.5, 55])
+    expect(backoffWeights(60, 3, 2.5, { tops: 1 })).toEqual(backoffWeights(60, 3, 2.5))
+  })
+  it('reads only sane fields, and writes only what differs from the default', () => {
+    expect(backoffShapeOf({})).toEqual({ tops: 1, pct: 0, reps: 0 })
+    expect(backoffShapeOf({ backoffTops: '2', backoffPct: 90, backoffReps: -3 })).toEqual({ tops: 2, pct: 50, reps: 0 })
+    expect(backoffShapeFields({ backoffTops: 1, backoffPct: 15 })).toEqual({ backoffPct: 15 })
+  })
+  const cfg = { id: LIFT, sets: 3, reps: 8, weight: 60, inc: 2.5, backoff: true, backoffTops: 2, backoffPct: 15, backoffReps: 10 }
+  const routine = { id: 'r', prog: 'linear', ex: [cfg] }
+  const start = workouts => buildSessionEntries({ unit: 'kg', exWeights: {}, routines: [routine], workouts }, routine)[0]
+  const work = entry => entry.sets.filter(s => !isWarmupRow(s))
+  const done = (entry, reps) => ({ ...entry, sets: work(entry).map((s, i) => ({ ...s, r: reps[i], done: true })) })
+  it('opens at 60 × 8, 60 × 8, 50 × 10 and grades the back-off set by its own reps', () => {
+    const first = start([])
+    expect(work(first).map(s => [s.w, s.r])).toEqual([[60, 8], [60, 8], [50, 10]])
+    expect(readSession(done(first, [8, 8, 10])).ok).toBe(true)
+    expect(readSession(done(first, [8, 8, 9])).ok).toBe(false)
+    expect(readSession(done(first, [8, 7, 10])).ok).toBe(false)
+    const next = start([{ d: '2026-02-01', routineIds: ['r'], entries: [done(first, [8, 8, 10])] }])
+    expect(work(next).map(s => s.w)).toEqual([62.5, 62.5, 52.5])
+  })
+  it('travels in a plan file, and a hand-edited one is held to the same limits', () => {
+    const file = buildPlanBundle({ unit: 'kg', routines: [routine], week: {}, customEx: [] }, 'x')
+    expect(file.routines[0].ex[0]).toMatchObject({ backoff: true, backoffTops: 2, backoffPct: 15, backoffReps: 10 })
+    const back = parsePlan({ ...file, routines: [{ ...file.routines[0], ex: [{ ...file.routines[0].ex[0], backoffPct: 99 }] }] }, 'kg')
+    expect(back.routines[0].ex[0]).toMatchObject({ backoffTops: 2, backoffPct: 50, backoffReps: 10 })
+  })
+  it('opens the back-off set at its own reps before any weight is known, and the weight follows the top set', () => {
+    const empty = buildSessionEntries({ unit: 'kg', exWeights: {}, routines: [{ ...routine, ex: [{ ...cfg, weight: 0 }] }], workouts: [] }, routine)[0]
+    expect(work(empty).map(s => s.r)).toEqual([8, 8, 10])
+    const typed = cascadeWeight(empty.sets, empty.sets.indexOf(work(empty)[0]), 60, undefined, empty.target.backoffStep, backoffShapeOf(empty.target))
+    expect(work({ sets: typed }).slice(1).map(s => [s.w, s.r])).toEqual([[60, 8], [50, 10]])
+  })
+  it('cascades a top set edit over the sets under it, and a back-off edit onto the ones after', () => {
+    const rows = [{ w: 60, r: 8 }, { w: 60, r: 8 }, { w: 50, r: 10 }, { w: 50, r: 10 }]
+    expect(cascadeWeight(rows, 0, 70, undefined, 2.5, shape).map(r => r.w)).toEqual([60, 70, 57.5, 57.5])
+    expect(cascadeWeight(rows, 2, 45, undefined, 2.5, shape).map(r => r.w)).toEqual([60, 60, 50, 45])
   })
 })

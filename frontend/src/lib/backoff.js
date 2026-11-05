@@ -8,11 +8,35 @@
 // (26/24/22 → 28/26/24). Whether it is raised is the ordinary policy's call, which already
 // reads every planned set: one back-off set short of its reps holds the whole sequence.
 //
+// A plan can keep more than one top set (cfg.backoffTops, "2 top sets + 1 back-off") and drop
+// the back-off sets by a share of the top set instead of one step each (cfg.backoffPct, every
+// back-off set at the same lighter weight), with reps of their own (cfg.backoffReps). Without
+// them it is the one-step-per-set sequence above, exactly as before.
+//
 // Imports nothing from history.js or progression.js — both import this module.
 import { isWarmupRow, isSideSet, syncSideAggregate } from './workout-model.js'
 import { defaultIncrement, isAssisted } from './exercises.js'
 
 const round1 = v => Math.round(v * 10) / 10
+
+export const BACKOFF_PCT_MAX = 50
+const whole = (v, lo, hi) => { const n = Math.round(Number(v)) || 0; return n >= lo ? Math.min(hi, n) : 0 }
+
+/** The shape of a back-off plan: `tops` sets at the top weight (at least 1), then the back-off
+ *  sets, `pct` lighter than the top set (0: one step per set) at `reps` (0: the plan's reps). */
+export function backoffShapeOf(cfg) {
+  return {
+    tops: whole(cfg?.backoffTops, 1, 9) || 1,
+    pct: whole(cfg?.backoffPct, 1, BACKOFF_PCT_MAX),
+    reps: whole(cfg?.backoffReps, 1, 100),
+  }
+}
+
+/** The shape fields as a plan stores them: only those that differ from the default. */
+export function backoffShapeFields(cfg) {
+  const { tops, pct, reps } = backoffShapeOf(cfg)
+  return { ...(tops > 1 ? { backoffTops: tops } : {}), ...(pct ? { backoffPct: pct } : {}), ...(reps ? { backoffReps: reps } : {}) }
+}
 
 /** Whether a plan asks for back-off sets. Off unless switched on, so every plan saved before
  *  this field existed builds exactly as it did. A pyramid owns each set already, and a
@@ -27,16 +51,32 @@ export function isBackoff(cfg) {
  * The weight of work set `k` (0 = the top set) below a top set of `top`. The same grid rule a
  * stepper tap uses: a top set on the step's grid lands every back-off set on it, one typed off
  * the grid steps down from where it is. Never below one step — an empty bar is not a set — and
- * never above the top set itself.
+ * never above the top set itself. `shape` (backoffShapeOf): the first `tops` sets stay at the
+ * top set, and with a `pct` every set after them is that share lighter, rounded down to the step.
  */
-export function backoffAt(top, k, step) {
+export function backoffAt(top, k, step, shape) {
   const t = Number(top) || 0
   const s = Number(step) || 0
-  if (!(t > 0) || !(s > 0) || !(k > 0)) return t
-  const raw = t - k * s
+  const tops = shape?.tops || 1
+  if (!(t > 0) || !(s > 0) || !(k >= tops)) return t
   const onGrid = Math.abs(t - Math.round(t / s) * s) <= 0.1
-  const v = onGrid ? round1(Math.round(raw / s) * s) : round1(raw)
-  return Math.max(Math.min(t, s), v)
+  let v
+  if (shape?.pct > 0) {
+    const raw = t * (1 - shape.pct / 100)
+    v = onGrid ? round1(Math.floor(raw / s + 1e-9) * s) : round1(raw)
+  } else {
+    const raw = t - (k - tops + 1) * s
+    v = onGrid ? round1(Math.round(raw / s) * s) : round1(raw)
+  }
+  return Math.max(Math.min(t, s), Math.min(t, v))
+}
+
+/** Work set `b`'s weight after work set `a` was set to `value` by hand: from a top set the
+ *  sequence is rebuilt under it, from a back-off set the sets after it follow that one. */
+export function backoffAfter(value, a, b, step, shape) {
+  const tops = shape?.tops || 1
+  if (a < tops) return backoffAt(value, b, step, shape)
+  return shape?.pct > 0 ? value : backoffAt(value, b - a, step)
 }
 
 /** The step back-off sets use: the exercise's own (cfg.inc), else its default — the same
@@ -48,8 +88,8 @@ export function backoffStepOf(cfg, unit) {
 }
 
 /** The planned weights for `n` work sets: "26 → 24 → 22". */
-export function backoffWeights(top, n, step) {
-  return Array.from({ length: Math.max(0, n) }, (_, k) => backoffAt(top, k, step))
+export function backoffWeights(top, n, step, shape) {
+  return Array.from({ length: Math.max(0, n) }, (_, k) => backoffAt(top, k, step, shape))
 }
 
 /**
@@ -57,21 +97,25 @@ export function backoffWeights(top, n, step) {
  * left alone (they ramp toward the top set), a logged row is never rewritten, and a per-side
  * row steps both limbs.
  */
-export function applyBackoff(rows, step) {
+export function applyBackoff(rows, step, shape) {
   if (!(step > 0)) return rows
   const first = rows.find(r => !isWarmupRow(r))
   const top = first ? Number(first.w) || 0 : 0
-  if (!(top > 0)) return rows
+  const reps = shape?.reps > 0 ? shape.reps : 0
+  // With no load yet (a new plan), the back-off sets still open at their own reps; the weight
+  // follows once the top set is typed (history.js cascadeWeight).
+  if (!(top > 0) && !reps) return rows
   let k = -1
   return rows.map(row => {
     if (isWarmupRow(row)) return row
     k++
-    if (k === 0) return row
-    const w = backoffAt(top, k, step)
+    if (k < (shape?.tops || 1)) return row
+    const load = top > 0 ? { w: backoffAt(top, k, step, shape) } : {}
+    // Back-off reps of their own; a per-side row's total splits over both limbs, as makeSideSet does.
     if (isSideSet(row)) {
-      const side = s => (s.done ? s : { ...s, w })
+      const side = s => (s.done ? s : { ...s, ...load, ...(reps ? { r: Math.round(reps / 2) } : {}) })
       return syncSideAggregate({ ...row, sides: { L: side(row.sides.L), R: side(row.sides.R) } })
     }
-    return row.done ? row : { ...row, w }
+    return row.done ? row : { ...row, ...load, ...(reps ? { r: reps } : {}) }
   })
 }
