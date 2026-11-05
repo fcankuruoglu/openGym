@@ -101,19 +101,21 @@ export function applyBackoff(rows, step, shape) {
   if (!(step > 0)) return rows
   const first = rows.find(r => !isWarmupRow(r))
   const top = first ? Number(first.w) || 0 : 0
-  if (!(top > 0)) return rows
+  const reps = shape?.reps > 0 ? shape.reps : 0
+  // With no load yet (a new plan), the back-off sets still open at their own reps; the weight
+  // follows once the top set is typed (history.js cascadeWeight).
+  if (!(top > 0) && !reps) return rows
   let k = -1
   return rows.map(row => {
     if (isWarmupRow(row)) return row
     k++
     if (k < (shape?.tops || 1)) return row
-    const w = backoffAt(top, k, step, shape)
+    const load = top > 0 ? { w: backoffAt(top, k, step, shape) } : {}
     // Back-off reps of their own; a per-side row's total splits over both limbs, as makeSideSet does.
-    const reps = shape?.reps > 0 ? shape.reps : 0
     if (isSideSet(row)) {
-      const side = s => (s.done ? s : { ...s, w, ...(reps ? { r: Math.round(reps / 2) } : {}) })
+      const side = s => (s.done ? s : { ...s, ...load, ...(reps ? { r: Math.round(reps / 2) } : {}) })
       return syncSideAggregate({ ...row, sides: { L: side(row.sides.L), R: side(row.sides.R) } })
     }
-    return row.done ? row : { ...row, w, ...(reps ? { r: reps } : {}) }
+    return row.done ? row : { ...row, ...load, ...(reps ? { r: reps } : {}) }
   })
 }
