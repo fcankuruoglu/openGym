@@ -8,7 +8,8 @@ import { DEMO, DEMO_SEEDED } from '../lib/demo.js'
 import { rememberDefaultLang } from '../lib/default-lang.js'
 import { guestAllowed } from '../lib/guest.js'
 import { stateJson } from '../lib/state-json.js'
-import { MOBILE, initReminderSync, nativeLoad, nativeSave, onAppActive, readJsonFile, syncReminder, writeAutoBackup, writeJsonFile } from '../lib/mobile.js'
+import { withMark } from '../lib/habits.js'
+import { MOBILE, initHabitActions, initReminderSync, nativeLoad, nativeSave, onAppActive, readJsonFile, syncReminder, writeAutoBackup, writeJsonFile } from '../lib/mobile.js'
 import { initHealthSync, syncHealth, readHealth } from '../lib/health-sync.js'
 import { refillIfComplete } from '../lib/rotation.js'
 import { liftLegacy } from '../lib/sync-legacy.js'
@@ -205,6 +206,10 @@ export const DEF = {
   // (lib/ex-unit.js, issue #657). Shown and typed in that unit, still stored in the profile's.
   // Absent or null = the profile's unit. Stamped like dbLoad.
   exUnit: {},
+  // Daily habits (supplements, water, …) and their ticks per date and time (lib/habits.js).
+  // Stamped maps like dayNotes; the stock is worked out from the ticks, never stored as a count.
+  habits: {},
+  habitLog: {},
   // Gym check-in cards (see views/CheckIn.jsx). Each is a membership
   // code shown as a QR/barcode at the gym's turnstile — added by typing it, importing a photo
   // of the card, or scanning it. We only ever keep the code's VALUE, never a photo: the image
@@ -550,6 +555,8 @@ export const useStore = create((set, get) => {
   }
 
   initReminderSync(() => get().S)
+  // A habit reminder's Taken button (lib/mobile.js): ticked here, synced like any tick.
+  initHabitActions(key => get().update(s => { s.habitLog = withMark(s.habitLog, key, 'done') }))
   // A phone with its own Coach key runs its automatic reviews itself, while the app is open.
   initCoachSchedule(() => get())
   // What it reads back from the health hub (heart rate, weigh-ins) goes in as any change does.

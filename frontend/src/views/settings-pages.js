@@ -35,6 +35,8 @@ export const PAGES = {
   gym: { title: 'Gym reminder', icon: 'mapPin', tint: 'var(--green)', parent: 'reminders' },
   'gym-find': { title: 'Add a gym', icon: 'plusCircle', tint: 'var(--green)', parent: 'gym' },
   'gym-edit': { title: 'Your gym', icon: 'mapPin', tint: 'var(--orange)', parent: 'gym' },
+  // Supplements, water, a stretch: their times, days and stock (views/Habits.jsx, lib/habits.js).
+  habits: { title: 'Daily habits', icon: 'checkCircle', tint: 'var(--green)', parent: 'reminders' },
   // Seasonal themes (lib/seasonal.js), one section per theme.
   themes: { title: 'Seasonal themes', icon: 'pumpkin', tint: 'var(--orange)', parent: 'look', mod: 'seasonal' },
   // The phone's health store, one page per platform (until 1.4.4 a section of Data & backup).
@@ -55,7 +57,7 @@ export const ROOT_GROUPS = [['modules'], ['workout', 'alerts', 'reminders'], ['p
 export function pageVisible(page, ctx) {
   // A page of a module that is off (ctx.mod answers isOn for this profile; absent: all on).
   if (PAGES[page]?.mod && ctx.mod && !ctx.mod(PAGES[page].mod)) return false
-  if (page === 'reminders') return !!(ctx.user || ctx.mobile)
+  if (page === 'reminders' || page === 'habits') return !!(ctx.user || ctx.mobile)
   if (page === 'coach') return !!ctx.mobile
   // The iPhone app only: the watch app ships inside it.
   if (page === 'watch') return !!ctx.ios
@@ -140,6 +142,7 @@ export const SEARCH = [
   { page: 'reminders', title: 'Reminder time', icon: 'clock', tint: 'var(--purple)', kw: 'reminder time clock hour when', when: c => remind(c) && c.reminderOn, via: PUSH },
   { page: 'reminders', title: 'Nudge me when I skip a planned workout', icon: 'bell', tint: 'var(--red)', kw: 'nudge skip missed motivation', when: c => remind(c) && c.reminderOn, via: PUSH },
   { page: 'reminders', title: 'Nudge tone', icon: 'chat', tint: 'var(--blue)', kw: 'nudge tone friendly guilt drill sergeant', opts: ['Friendly', 'Guilt trip', 'Drill sergeant'], when: c => remind(c) && c.reminderOn && c.nudge, via: PUSH },
+  { page: 'reminders', title: 'Daily habits', icon: 'checkCircle', tint: 'var(--green)', kw: 'habit habits supplement supplements vitamin vitamins creatine protein pill pills capsule medication medicine water drink stock tick' },
   { page: 'reminders', title: 'Gym reminder', icon: 'mapPin', tint: 'var(--green)', kw: 'gym location arrive arrival geofence place map nearby', when: c => !!c.mobile && c.gymReminder !== false },
   { page: 'reminders', title: 'Send test notification', icon: 'bell', tint: 'var(--red)', kw: 'test push notification try', when: c => !c.mobile && c.pushOK, via: PUSH },
   // Plan & schedule

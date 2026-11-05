@@ -216,15 +216,28 @@ self.addEventListener('push', e => {
       icon: 'icon-512.png',
       badge: 'icon-180.png',
       tag,
-      renotify: true
+      renotify: true,
+      // A habit reminder's Taken and In 10 min (api/push-messages.js habitPush). Browsers without
+      // buttons (iOS) leave them out and the tap opens the app as for any other push.
+      ...(Array.isArray(data.actions) ? { actions: data.actions } : {}),
+      ...(data.data && typeof data.data === 'object' ? { data: data.data } : {})
     })
   })())
 })
 self.addEventListener('notificationclick', e => {
   e.notification.close()
+  const habit = typeof e.notification.data?.habit === 'string' ? e.notification.data.habit : ''
+  // In 10 min: the server sends it again (POST api/habits/snooze), nothing opens.
+  if (habit && e.action === 'snooze') {
+    e.waitUntil(fetch('api/habits/snooze', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ key: habit }) }).catch(() => {}))
+    return
+  }
+  // Taken: the app opens on Home and ticks it (components/HabitsCard.jsx), so it syncs like any tick.
+  const url = habit && e.action === 'done' ? './#/home?habit=' + encodeURIComponent(habit) : ''
   e.waitUntil(self.clients.matchAll({ type: 'window' }).then(clients => {
     const c = clients.find(c => 'focus' in c)
-    return c ? c.focus() : self.clients.openWindow('./')
+    if (!c) return self.clients.openWindow(url || './')
+    return url && 'navigate' in c ? c.navigate(url).then(w => (w || c).focus()) : c.focus()
   }))
 })
 // The push service rotated the subscription (key change, expiry): subscribe again with the same

@@ -1,4 +1,5 @@
 import { NUDGE_COPY } from './nudge-copy.js';
+import { HABIT_COPY } from './habit-copy.js';
 import { lineIndex } from './nudge.js';
 
 const COPY = {
@@ -49,6 +50,23 @@ export function restTimerPush(lang) {
 
 export function testPush(lang) {
   return { title: 'openGym', body: copyFor(lang).testBody, tag: 'test' };
+}
+
+// A daily habit's time (habits.js): its own name, its dose or a line saying it is time, and how
+// many days the stock lasts once that is a week or less (frontend lib/habits.js habitBody, LOW_DAYS).
+// Translated through habit-copy.js, generated from the frontend packs; de-CH as for the nudge. One
+// tag per time, so two habits due together both stay in the tray.
+const HABIT_LOW_DAYS = 7;
+export function habitPush(lang, habit) {
+  const pick = HABIT_COPY[lang === 'de-CH' ? 'de' : lang] || HABIT_COPY.en;
+  const ch = s => (lang === 'de-CH' ? s.replace(/ß/g, 'ss') : s);
+  const base = habit.dose || ch(pick.body);
+  const low = habit.left != null && habit.left <= HABIT_LOW_DAYS ? ' · ' + ch(pick.low).replace('{0}', String(habit.left)) : '';
+  return {
+    title: habit.name, body: base + low, tag: 'habit-' + habit.key,
+    data: { habit: habit.key },
+    actions: [{ action: 'done', title: ch(pick.done) }, { action: 'snooze', title: ch(pick.snooze) }],
+  };
 }
 
 export function dayReminderPush(lang, routine) {

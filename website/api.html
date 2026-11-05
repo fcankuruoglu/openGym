@@ -247,7 +247,7 @@ main.api-main .lead { color: var(--fg-2); max-width: 58ch; margin: 14px 0 0; fon
   <p class="api-facts">
     <span>OpenAPI 3.1.0</span>
     <span>openGym v1.4.3</span>
-    <span>92 endpoints</span>
+    <span>93 endpoints</span>
     <span>AGPL-3.0-or-later</span>
   </p>
 
@@ -2085,6 +2085,42 @@ main.api-main .lead { color: var(--fg-2); max-width: 58ch; margin: 14px 0 0; fon
   <div class="prow rrow">
     <span class="r-code s2">200</span>
     <span class="p-desc">Removed (or was never there).<span class="r-sig"><a href="#schema-Ok">Ok</a></span></span>
+  </div>
+  <div class="prow rrow">
+    <span class="r-code s4">401</span>
+    <span class="p-desc">No session, expired/revoked session, or a disabled account.<span class="r-sig"><code>{&quot;error&quot;:&quot;not signed in&quot;}</code></span></span>
+  </div>
+    </div>
+  </div>
+</details>
+
+<details class="ep" id="op-habitSnooze">
+  <summary>
+    <span class="m post">POST</span>
+    <span class="ep-path"><code>/api/habits/snooze</code></span>
+    <span class="ep-chev" aria-hidden="true"></span>
+    <span class="ep-sum">Remind me about a daily habit again in 10 minutes</span>
+  </summary>
+  <div class="ep-body">
+<p>The &quot;In 10 min&quot; button of a daily-habit push. The server sends that habit's reminder again ten minutes later, unless the time was ticked off or skipped in the meantime. Kept in db.json, the profile is not written.</p>
+    <p class="ep-auth"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Requires a session: the cookie set at sign-in, or <code>Authorization: Bearer &lt;token&gt;</code> from mobile-app pairing.</span></p>
+
+<p class="ep-h">Request body <span class="p-hint">(JSON)</span></p><div class="ptab">
+  <div class="prow">
+    <span class="p-name">key<em class="p-req" title="required">required</em></span>
+    <span class="p-type">string</span>
+    <span class="p-desc">The habit time, <code>YYYY-MM-DD|&lt;habit id&gt;|HH:MM</code>.</span>
+  </div>
+</div>
+    <p class="ep-h">Responses</p>
+    <div class="ptab">
+  <div class="prow rrow">
+    <span class="r-code s2">200</span>
+    <span class="p-desc">Snoozed.<span class="r-sig"><a href="#schema-Ok">Ok</a></span></span>
+  </div>
+  <div class="prow rrow">
+    <span class="r-code s4">400</span>
+    <span class="p-desc"><code>key</code> missing or not a habit time.<span class="r-sig"><code>{&quot;error&quot;:&quot;key required&quot;}</code></span></span>
   </div>
   <div class="prow rrow">
     <span class="r-code s4">401</span>

@@ -73,6 +73,7 @@ import { presetCopy } from '../lib/modules-copy.js'
 import { reportSheet } from '../components/ReportSheet.jsx'
 import { csvExportSheet } from '../components/CsvExportSheet.jsx'
 import GymReminderPage, { GymEditPage, GymFindPage } from './GymReminder.jsx'
+import HabitsPage from './Habits.jsx'
 import { readGymConfig } from '../lib/gym-reminder.js'
 import { THEMES, inSeason, seasonChoice, activeSeason } from '../lib/seasonal.js'
 import { adventOf, adventOpenable } from '../lib/advent.js'
@@ -558,6 +559,7 @@ export default function Settings({ page = null, find = null, via = null, entryKe
     gym: () => <GymReminderPage />,
     'gym-find': () => <GymFindPage />,
     'gym-edit': () => <GymEditPage />,
+    habits: () => <HabitsPage />,
     workout: () => <>
       {/* Warm-ups that build themselves from the work weight (#156, lib/warmup-ramp.js). Off by
           default, so nothing changes until someone asks; an exercise can still pick Auto, its own
@@ -807,6 +809,9 @@ export default function Settings({ page = null, find = null, via = null, entryKe
 
     reminders: () => <>
       <NotificationsCard S={S} update={update} toast={toast} />
+      <Section footer={t('Supplements, water, a stretch: a reminder at each time, a tick on Home.')}>
+        <Row icon="checkCircle" iconTint="var(--green)" title={t('Daily habits')} accessory="chevron" onClick={() => nav('/settings/habits')} />
+      </Section>
       {MOBILE && gymReminder && <Section footer={t('A nudge when you walk into your gym.')}>
         <Row icon="mapPin" iconTint="var(--green)" title={t('Gym reminder')} value={gymOn ? t('On') : t('Off')} accessory="chevron" onClick={() => nav('/settings/gym')} />
       </Section>}
