@@ -3757,4 +3757,8 @@ export default {
   "{0}% in the last 30 days": "{0}٪ في آخر 30 يومًا",
   "After workout": "بعد التمرين",
   "After workout: on every day you log one, half an hour after it ends.": "بعد التمرين: في كل يوم تسجّل فيه تمرينًا، بعد نصف ساعة من انتهائه.",
+  "Yesterday": "أمس",
+  "Previous day": "اليوم السابق",
+  "Next day": "اليوم التالي",
+  "Nothing planned for this day.": "لا شيء مخطط لهذا اليوم.",
 }

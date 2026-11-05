@@ -3713,4 +3713,8 @@ export default {
   "{0}% in the last 30 days": "{0}% ใน 30 วันที่ผ่านมา",
   "After workout": "หลังออกกำลังกาย",
   "After workout: on every day you log one, half an hour after it ends.": "หลังออกกำลังกาย: ทุกวันที่คุณบันทึกการฝึก ครึ่งชั่วโมงหลังจบ",
+  "Yesterday": "เมื่อวาน",
+  "Previous day": "วันก่อนหน้า",
+  "Next day": "วันถัดไป",
+  "Nothing planned for this day.": "ไม่มีอะไรวางแผนไว้สำหรับวันนี้",
 }

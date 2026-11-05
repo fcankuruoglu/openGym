@@ -3702,4 +3702,8 @@ export default {
   "{0}% in the last 30 days": "पिछले 30 दिनों में {0}%",
   "After workout": "वर्कआउट के बाद",
   "After workout: on every day you log one, half an hour after it ends.": "वर्कआउट के बाद: जिस भी दिन आप वर्कआउट लॉग करें, उसके खत्म होने के आधे घंटे बाद।",
+  "Yesterday": "कल",
+  "Previous day": "पिछला दिन",
+  "Next day": "अगला दिन",
+  "Nothing planned for this day.": "इस दिन के लिए कुछ तय नहीं है।",
 }

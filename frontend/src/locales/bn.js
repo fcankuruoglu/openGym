@@ -3781,4 +3781,8 @@ export default {
   "{0}% in the last 30 days": "গত ৩০ দিনে {0}%",
   "After workout": "ওয়ার্কআউটের পরে",
   "After workout: on every day you log one, half an hour after it ends.": "ওয়ার্কআউটের পরে: যেদিন একটি লগ করবেন, শেষ হওয়ার আধা ঘণ্টা পরে।",
+  "Yesterday": "গতকাল",
+  "Previous day": "আগের দিন",
+  "Next day": "পরের দিন",
+  "Nothing planned for this day.": "এই দিনের জন্য কিছু পরিকল্পনা নেই।",
 }

@@ -3749,4 +3749,8 @@ export default {
   "{0}% in the last 30 days": "{0} % de senaste 30 dagarna",
   "After workout": "Efter passet",
   "After workout: on every day you log one, half an hour after it ends.": "Efter passet: varje dag du loggar ett, en halvtimme efter att det slutat.",
+  "Yesterday": "Igår",
+  "Previous day": "Föregående dag",
+  "Next day": "Nästa dag",
+  "Nothing planned for this day.": "Inget planerat den här dagen.",
 }

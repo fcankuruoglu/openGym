@@ -2374,6 +2374,9 @@ button.mchip{border:none;font:inherit;font-size:var(--fs-caption);cursor:pointer
 .ch-row.done .pbar i,.ch-mini .done i{background:var(--win-ink)}
 .ch-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}
 /* Home: today's daily habits (components/HabitsCard.jsx) */
+.habit-day{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
+.habit-day-name{font-size:var(--fs-subhead);font-weight:500}
+.habit-none{margin:10px 0 0;font-size:var(--fs-footnote);color:var(--label-2)}
 .habit-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
 .habit-row{display:flex;align-items:center;gap:10px;min-height:44px}
 .habit-time{flex:none;font-size:var(--fs-footnote);font-variant-numeric:tabular-nums;color:var(--label-2)}

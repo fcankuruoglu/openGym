@@ -3702,4 +3702,8 @@ export default {
   "{0}% in the last 30 days": "最近 30 天 {0}%",
   "After workout": "训练后",
   "After workout: on every day you log one, half an hour after it ends.": "训练后：每个记录了训练的日子，在训练结束半小时后。",
+  "Yesterday": "昨天",
+  "Previous day": "前一天",
+  "Next day": "后一天",
+  "Nothing planned for this day.": "这一天没有安排。",
 }

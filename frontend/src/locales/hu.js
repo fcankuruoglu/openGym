@@ -3705,4 +3705,8 @@ export default {
   "{0}% in the last 30 days": "{0}% az elmúlt 30 napban",
   "After workout": "Edzés után",
   "After workout: on every day you log one, half an hour after it ends.": "Edzés után: minden nap, amikor rögzítesz egyet, fél órával a vége után.",
+  "Yesterday": "Tegnap",
+  "Previous day": "Előző nap",
+  "Next day": "Következő nap",
+  "Nothing planned for this day.": "Erre a napra nincs semmi tervezve.",
 }

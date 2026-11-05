@@ -37,6 +37,8 @@ export const HABIT_PUSH = {
   done: 'Taken', snooze: 'In 10 min',
 }
 export const SNOOZE_MIN = 10
+// How far back Home's card goes to tick off a day that was forgotten.
+export const BACK_DAYS = 7
 // A habit's key as it travels in a notification and back: date, id, time (habitKey).
 export const HABIT_KEY = /^\d{4}-\d{2}-\d{2}\|[A-Za-z0-9_-]{1,40}\|(([01]\d|2[0-3]):[0-5]\d|post)$/
 export const POST = 'post'
@@ -197,7 +199,8 @@ export function habitBody(dose, left, tr = fill) {
   return left != null && left <= LOW_DAYS ? `${base} · ${tr(HABIT_PUSH.low, left)}` : base
 }
 
-const dayShift = (iso, n) => new Date(Date.parse(iso + 'T12:00:00Z') + n * 86400000).toISOString().slice(0, 10)
+/** The date `n` days after (before, for a negative `n`) the date `iso`. */
+export const dayShift = (iso, n) => new Date(Date.parse(iso + 'T12:00:00Z') + n * 86400000).toISOString().slice(0, 10)
 
 /**
  * How habit `id` is going on `today`: `streak`, the due days in a row with every time ticked or

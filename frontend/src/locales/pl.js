@@ -3702,4 +3702,8 @@ export default {
   "{0}% in the last 30 days": "{0}% w ostatnich 30 dniach",
   "After workout": "Po treningu",
   "After workout: on every day you log one, half an hour after it ends.": "Po treningu: w każdy dzień z zapisanym treningiem, pół godziny po jego końcu.",
+  "Yesterday": "Wczoraj",
+  "Previous day": "Poprzedni dzień",
+  "Next day": "Następny dzień",
+  "Nothing planned for this day.": "Na ten dzień nic nie zaplanowano.",
 }

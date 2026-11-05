@@ -3702,4 +3702,8 @@ export default {
   "{0}% in the last 30 days": "Son 30 günde %{0}",
   "After workout": "Antrenmandan sonra",
   "After workout: on every day you log one, half an hour after it ends.": "Antrenmandan sonra: antrenman kaydettiğin her gün, bittikten yarım saat sonra.",
+  "Yesterday": "Dün",
+  "Previous day": "Önceki gün",
+  "Next day": "Sonraki gün",
+  "Nothing planned for this day.": "Bu gün için plan yok.",
 }

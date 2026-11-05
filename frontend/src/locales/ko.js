@@ -3702,4 +3702,8 @@ export default {
   "{0}% in the last 30 days": "최근 30일 동안 {0}%",
   "After workout": "운동 후",
   "After workout: on every day you log one, half an hour after it ends.": "운동 후: 운동을 기록한 날마다, 끝난 지 30분 뒤에.",
+  "Yesterday": "어제",
+  "Previous day": "이전 날",
+  "Next day": "다음 날",
+  "Nothing planned for this day.": "이날은 계획된 것이 없어요.",
 }
