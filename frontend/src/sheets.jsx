@@ -59,7 +59,7 @@ import { relativeSeries } from './lib/relative-strength.js'
 import { isBellEx, dbLoadOf, dbLoadFor, withDbLoad, entryDbLoad, currentDbLoad, isOneArm, dumbbellsOf, ownsDumbbells, withDumbbells, ownsNoDumbbells, withNoDumbbells, presetWeights, cleanWeights, canHaveStack, stackOf, withStack, stackFromStep } from './lib/dumbbells.js'
 import { policyFor, profileRule, defaultIncrement, POLICIES_FOR, POLICY_NAME, POLICY_DESC, MAX_BW_SETS, MAX_TRIPLE_SETS } from './lib/progression.js'
 import { normalizeRepRange } from './lib/rep-range.js'
-import { isBackoff, backoffWeights } from './lib/backoff.js'
+import { isBackoff, backoffWeights, backoffShapeOf, backoffShapeFields, BACKOFF_PCT_MAX } from './lib/backoff.js'
 import { isPyramid, normalizePyramid, normalizePyramidRest, normalizePyramidWeight, pyramidFromFlat, flatFromPyramid, pyramidLabel, PYRAMID_MAX, MAX_PYRAMID_SETS, PYRAMID_PRESETS } from './lib/pyramid.js'
 import { MOBILE, shareExport, shareExportBlob } from './lib/mobile.js'
 import { speedUnitOf, toSpeed, fromSpeed } from './lib/speed.js'
@@ -2063,8 +2063,10 @@ function ProgressionFields({ ex, mode, c, setC, routine, unit, perSide, bw, fall
   const weightless = weightlessOf(c, mode, bw)
   const invalid = !progressionStepIsValid(inc, active, backoff, weightless)
   // "26 → 24 → 22 kg": what the sets will open at, from the weight and step typed above.
+  const workSets = Math.max(1, Math.round(c.sets) || 1)
+  const shape = backoffShapeOf(c)
   const preview = backoff && c.weight > 0 && inc > 0
-    ? backoffWeights(c.weight, Math.max(1, Math.round(c.sets) || 1), inc).map(fmtNum).join(' → ') + ' ' + unit
+    ? backoffWeights(c.weight, workSets, inc, shape).map(fmtNum).join(' → ') + ' ' + unit
     : ''
   const stride = mode === 'reps' && perSide ? 2 : 1
   const range = climbsRange(active) ? normalizeRepRange(c.reps, c.repsMin, stride) : null
@@ -2128,10 +2130,20 @@ function ProgressionFields({ ex, mode, c, setC, routine, unit, perSide, bw, fall
     {canBackoff && <>
       <div className="sect-b" style={{ marginBottom: 8 }}>
         <Row icon="steps" iconTint="var(--acc)" title={t('Back-off sets')}
-          subtitle={t('Each set one step lighter than the one before. The weight above is the first set.')}>
+          subtitle={backoff && (shape.tops > 1 || shape.pct) ? t('The top sets stay at the weight above, the rest are lighter.') : t('Each set one step lighter than the one before. The weight above is the first set.')}>
           <Switch checked={backoff} onChange={v => setC(x => ({ ...x, backoff: v || undefined }))} />
         </Row>
       </div>
+      {/* "2 top sets + 1 back-off": how many sets stay at the top weight, how much lighter the
+          rest are (0 keeps one step per set) and their own reps (0 keeps the plan's). */}
+      {backoff && <div className="row cfgrow" style={{ marginBottom: 12 }}>
+        <Stepper label={t('Top sets')} value={shape.tops} step={1} min={1} max={Math.max(1, workSets - 1)} decimal={false}
+          onChange={v => setC(x => ({ ...x, backoffTops: v > 1 ? v : undefined }))} />
+        <Stepper label={t('Lighter by (%)')} value={shape.pct} step={5} min={0} max={BACKOFF_PCT_MAX} decimal={false}
+          onChange={v => setC(x => ({ ...x, backoffPct: v > 0 ? v : undefined }))} />
+        <Stepper label={t('Back-off reps')} value={shape.reps} step={1} min={0} decimal={false}
+          onChange={v => setC(x => ({ ...x, backoffReps: v > 0 ? v : undefined }))} />
+      </div>}
       <div className="small dim" style={{ marginBottom: 18 }}>
         {backoff
           ? (preview ? t('Sets open at {0}. The first set goes up when every set reaches its reps, and the rest follow it.', preview) : t('The first set goes up when every set reaches its reps, and the rest follow it.'))
@@ -2337,7 +2349,7 @@ function ExConfig({ ex, existing, onSave, onDelete, onReplace, close, routine, i
       // decided here, in the plan, not re-decided live each time you train it.
       if (!list.length && c.intensifier && c.intensifier.type) out.intensifier = intensifierToSave(c.intensifier)
       // Back-off sets: written only when on, and only where the sheet offered them.
-      if (c.backoff === true && backoffOffered(out, 'reps', ex, bw) && isBackoff({ ...out, backoff: true })) out.backoff = true
+      if (c.backoff === true && backoffOffered(out, 'reps', ex, bw) && isBackoff({ ...out, backoff: true })) Object.assign(out, { backoff: true }, backoffShapeFields(c))
       // A pyramid has its own Max set for this, so the flag is not offered (or kept) there.
       if (!list.length) Object.assign(out, withFailure)
       saveAs(out)

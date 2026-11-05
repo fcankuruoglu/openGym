@@ -11,6 +11,7 @@ import { bestsFor, lastRowFor, oddValues } from '../lib/typo-check.js'
 import { usesBar } from '../lib/bar.js'
 import { loadKindFor, baseWeightFor, inventoryFor, rowLoad, sameLoad, plateDelta, dropGrid } from '../lib/plates.js'
 import { effectiveRoutines, effectiveRoutineIds, lastEntryFor, bestWeightFor, bestWeightForEntry, freestyleConfig, pickedExerciseConfig, setsDoneActive, setUnitsTotal, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, repStep, EFFORT, effortOf, stepEffort, capEffort, cascadeWeight, liveReramp, insertWarmupRow, barFloor, makeWarmupAt, canBeWarmup, makeWorkAt, removeRowAt, removeLastSet, setSpanAt, copyRowAt, copySpanAt, insertRowAt, pairAdjacent, unpairSuperset, cleanupSg, applyIntensifierPlan, pinnedNoteFor, exNoteFor, setsRepsOf, sessionVolume } from '../lib/history.js'
+import { backoffShapeOf } from '../lib/backoff.js'
 import { cleanNum, fmtNum, fmtPlate, fmtVol, exerciseNameText, fmtDate, fmtDaysAgo, todayISO, exCount, DAYN } from '../lib/format.js'
 import { speedUnitOf, toSpeed, fromSpeed } from '../lib/speed.js'
 import { clampIncline, hasIncline, inclineFits, inclineFrom, INCLINE_STEP } from '../lib/incline.js'
@@ -223,7 +224,7 @@ function ExerciseBlock({ entryIdx, compact, dense, editing, onToggle, onToggleSi
       const row = setSideField(e.sets[i], side, field, v)
       row.sides[side].weightOrigin = WEIGHT_ORIGIN_MANUAL
       e.sets[i] = markWarmupEdited(row, field)
-      e.sets = cascadeWeight(e.sets, i, v, side, e.target?.backoffStep)
+      e.sets = cascadeWeight(e.sets, i, v, side, e.target?.backoffStep, backoffShapeOf(e.target))
       rerampOpen(s, e, i)
     }), true)
   }
@@ -1384,7 +1385,7 @@ function ActiveWorkout() {
     // warm-up edit stays on its own row, and the later rungs keep their ramp loads.
     if (field === 'w') {
       e.sets[i].weightOrigin = WEIGHT_ORIGIN_MANUAL
-      e.sets = cascadeWeight(e.sets, i, v, undefined, e.target?.backoffStep)
+      e.sets = cascadeWeight(e.sets, i, v, undefined, e.target?.backoffStep, backoffShapeOf(e.target))
       rerampOpen(useStore.getState().S, e, i)
     }
     // A warm-up you changed is yours from now on ("Your last session" carries it, #525).

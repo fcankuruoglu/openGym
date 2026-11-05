@@ -7,7 +7,7 @@ import { buildSets, applyIntensifierPlan, modeOf, barFloor, isBw, lastEntryFor, 
 import { isWarmupRow, isSideSet, syncSideAggregate } from './workout-model.js'
 import { nextPrescription, applyPrescription, defaultIncrement, weightIncrement, plannedOf, deloadTo, DELOAD_FACTOR, policyFor } from './progression.js'
 import { dropGrid } from './plates.js'
-import { backoffStepOf, applyBackoff } from './backoff.js'
+import { backoffStepOf, backoffShapeOf, applyBackoff } from './backoff.js'
 import { dbLoadFor, historyAs, ownedWeightsFor, withMeaning } from './dumbbells.js'
 import { isAssisted } from './exercises.js'
 import { sessionHistory } from './backfill.js'
@@ -129,7 +129,7 @@ function planEntry(stored, cfg, routine, { noProg = false } = {}) {
   // first work set really opens at, on the active gym's plates and dumbbells.
   const block = !warmCarry && ['auto', 'own'].includes(warmupSource(st, cfg).kind)
   const built = applyPrescription(buildSets(st, warmCarry || block ? { ...cfg, warmupSets: 0 } : cfg, { step: ramp, rid: routine?.id, useTarget: policyKind === 'off' && !fromLast, planReps }), plan, ramp, barFloor(st, cfg.id), isAssisted(cfg))
-  const rows = backoffStep ? applyBackoff(built, backoffStep) : built
+  const rows = backoffStep ? applyBackoff(built, backoffStep, backoffShapeOf(cfg)) : built
   const shaped = applyIntensifierPlan(rows, cfg, dropGrid(st, cfg))
   const sets = warmCarry ? withCarriedWarmups(shaped, warmCarry, modeOf(cfg), cfg, ramp, barFloor(st, cfg.id))
     : block ? withWarmupBlock(st, cfg, shaped, { grid: dropGrid(st, cfg), floor: barFloor(st, cfg.id), unit: st.unit })
