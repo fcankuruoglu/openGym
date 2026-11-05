@@ -4,6 +4,11 @@
 import pt from './pt.js'
 
 export const PT_BR_OVERRIDES = {
+  'Tempo': 'Tempo',
+  'Tempo {0}': 'Tempo {0}',
+  'top set {0}': 'série principal {0}',
+  'Top set RPE': 'RPE da série principal',
+  'Top set RIR': 'RIR da série principal',
   'The top sets stay at the weight above, the rest are lighter.': 'As séries principais ficam no peso acima, as outras são mais leves.',
   'Top sets': 'Séries principais',
   'Lighter by (%)': 'Mais leve em (%)',

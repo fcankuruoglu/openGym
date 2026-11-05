@@ -22,6 +22,7 @@ import { isWarmupRow, isSideSet, syncSideAggregate, makeSideSet } from './workou
 import { normalizeRepRange } from './rep-range.js'
 import { isPyramid } from './pyramid.js'
 import { backoffAt, backoffShapeOf } from './backoff.js'
+import { topSetTooHard } from './cues.js'
 import { ownedWeightsFor, ownedKindFor, ownedUp, ownedDeload, ownedAround } from './dumbbells.js'
 
 export const POLICIES = ['off', 'linear', 'greyskull', 'double', 'triple', 'time']
@@ -324,7 +325,8 @@ export function readSession(entry, fallback) {
     count: reps.length,                                   // the dimension bodyweight work grows (#33)
     low: reps.length ? Math.min(...reps) : 0,
     amrap: reps.length ? reps[reps.length - 1] : 0,       // Greyskull's final set
-    ok: goal > 0 && enough && reps.length > 0 && reps.every((r, k) => r >= rowGoal(k))
+    // A top set rated a point or more harder than the slot's target RPE (lib/cues.js) holds the weight.
+    ok: goal > 0 && enough && reps.length > 0 && reps.every((r, k) => r >= rowGoal(k)) && !topSetTooHard(target, sets[0])
   }
 }
 

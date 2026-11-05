@@ -60,6 +60,7 @@ import { isBellEx, dbLoadOf, dbLoadFor, withDbLoad, entryDbLoad, currentDbLoad, 
 import { policyFor, profileRule, defaultIncrement, POLICIES_FOR, POLICY_NAME, POLICY_DESC, MAX_BW_SETS, MAX_TRIPLE_SETS } from './lib/progression.js'
 import { normalizeRepRange } from './lib/rep-range.js'
 import { isBackoff, backoffWeights, backoffShapeOf, backoffShapeFields, BACKOFF_PCT_MAX } from './lib/backoff.js'
+import { cueFields, topRpeOf, TOP_RPE_MIN, TOP_RPE_MAX } from './lib/cues.js'
 import { isPyramid, normalizePyramid, normalizePyramidRest, normalizePyramidWeight, pyramidFromFlat, flatFromPyramid, pyramidLabel, PYRAMID_MAX, MAX_PYRAMID_SETS, PYRAMID_PRESETS } from './lib/pyramid.js'
 import { MOBILE, shareExport, shareExportBlob } from './lib/mobile.js'
 import { speedUnitOf, toSpeed, fromSpeed } from './lib/speed.js'
@@ -2281,6 +2282,8 @@ function ExConfig({ ex, existing, onSave, onDelete, onReplace, close, routine, i
     // Mode-independent, so it is spread in below rather than folded into `flags`.
     const note = (c.note || '').trim().slice(0, 500)
     const withNote = note ? { note } : {}
+    // Tempo and top-set RPE (lib/cues.js), written only when set; the RPE only on rep work.
+    const withCues = cueFields(mode === 'reps' ? c : { tempo: c.tempo })
     // Only written when there are any, so a plan that never asked for warm-ups keeps the exact
     // shape it had — and reads back as 0 either way (buildSets).
     // The slot's own warm-up choice (lib/warmup-ramp.js): Auto, a block of its own or none, written
@@ -2318,7 +2321,7 @@ function ExConfig({ ex, existing, onSave, onDelete, onReplace, close, routine, i
     // The treadmill's grade, only when it has one, so a flat slot keeps the shape it had.
     const incline = clampIncline(c.incline)
     if (cardio) saveAs({ sets, min: Math.max(1, Math.round(c.min) || 20), speed: Math.max(0, c.speed || 8), ...(incline > 0 ? { incline } : {}), ...withNote, ...withRest, ...withSubs })
-    else if (mode === 'time') saveAs({ sets, mode: 'time', sec: Math.max(1, Math.round(c.sec) || 45), weight: Math.max(0, c.weight || 0), ...flags, ...(perSide ? { side: true } : {}), ...prog, ...withNote, ...withWarmups, ...withRest, ...withSetRests, ...withMeant, ...withFailure, ...withSubs })
+    else if (mode === 'time') saveAs({ sets, mode: 'time', sec: Math.max(1, Math.round(c.sec) || 45), weight: Math.max(0, c.weight || 0), ...flags, ...(perSide ? { side: true } : {}), ...prog, ...withNote, ...withCues, ...withWarmups, ...withRest, ...withSetRests, ...withMeant, ...withFailure, ...withSubs })
     else {
       // A unilateral target is stored even: the split has to divide, and a typed 15 would
       // otherwise plan seven reps on one side and eight on the other, every session.
@@ -2330,7 +2333,7 @@ function ExConfig({ ex, existing, onSave, onDelete, onReplace, close, routine, i
         range = normalizeRepRange(reps, c.repsMin, stride)
         reps = range.reps
       }
-      const out = { sets, mode: 'reps', reps, weight: Math.max(0, c.weight || 0), ...flags, ...(perSide ? { side: true } : {}), ...prog, ...withNote, ...withWarmups, ...withRest, ...withSetRests, ...withMeant, ...withSubs }
+      const out = { sets, mode: 'reps', reps, weight: Math.max(0, c.weight || 0), ...flags, ...(perSide ? { side: true } : {}), ...prog, ...withNote, ...withCues, ...withWarmups, ...withRest, ...withSetRests, ...withMeant, ...withSubs }
       // The list is the prescription; sets and reps follow it, so everything that reads the
       // flat target (a config sheet reopened with the toggle off, older builds) still makes sense.
       const list = pyramid ? normalizePyramid(c.pyramid, stride) : []
@@ -2679,6 +2682,17 @@ function ExConfig({ ex, existing, onSave, onDelete, onReplace, close, routine, i
     {pyramid
       ? <div className="small dim" style={{ marginBottom: 18 }}>{t('Weight is up to you: pyramid sets are not progressed automatically.')}</div>
       : <ProgressionFields ex={ex} mode={mode} c={c} setC={setC} routine={routine} unit={st.unit} perSide={perSide} bw={bw} fallback={profileRule(st)} freestyle={routine ? false : freestyle} />}
+    {/* How each rep is lifted and how hard the top set should feel (lib/cues.js): both optional. */}
+    {!cardio && <div className="row cfgrow" style={{ marginBottom: 18 }}>
+      <label className="stp-w"><span className="stp-l">{t('Tempo')}</span>
+        <TextField className="cue-tempo" inputMode="text" maxLength={4} placeholder="2101" value={c.tempo || ''} aria-label={t('Tempo')}
+          onChange={e => setC(x => ({ ...x, tempo: e.target.value.toUpperCase().replace(/[^0-9X]/g, '') || undefined }))} />
+      </label>
+      {mode === 'reps' && <Stepper label={effortOf(st) === 'rir' ? t('Top set RIR') : t('Top set RPE')} value={topRpeOf(c)} step={0.5}
+        min={0} max={TOP_RPE_MAX} display={topRpeOf(c) ? (effortOf(st) === 'rir' ? fmtNum(10 - topRpeOf(c)) : null) : t('Off')}
+        onStep={(v, step, dir) => { if (!v) return dir > 0 ? 8 : 0; const n = v + (effortOf(st) === 'rir' ? -dir : dir) * step; return n < TOP_RPE_MIN || n > TOP_RPE_MAX ? (dir < 0 ? 0 : v) : n }}
+        onChange={v => setC(x => ({ ...x, topRpe: v >= TOP_RPE_MIN ? v : undefined }))} />}
+    </div>}
     <textarea className="input" rows={3} maxLength={500} style={{ marginBottom: 18 }}
       placeholder={t('Note (optional): loading cues, "bar only, then +1 plate/side each set", anything worth remembering')}
       value={c.note || ''} onChange={e => setC(x => ({ ...x, note: e.target.value }))} />

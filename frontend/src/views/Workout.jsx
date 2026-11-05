@@ -12,6 +12,7 @@ import { usesBar } from '../lib/bar.js'
 import { loadKindFor, baseWeightFor, inventoryFor, rowLoad, sameLoad, plateDelta, dropGrid } from '../lib/plates.js'
 import { effectiveRoutines, effectiveRoutineIds, lastEntryFor, bestWeightFor, bestWeightForEntry, freestyleConfig, pickedExerciseConfig, setsDoneActive, setUnitsTotal, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, repStep, EFFORT, effortOf, stepEffort, capEffort, cascadeWeight, liveReramp, insertWarmupRow, barFloor, makeWarmupAt, canBeWarmup, makeWorkAt, removeRowAt, removeLastSet, setSpanAt, copyRowAt, copySpanAt, insertRowAt, pairAdjacent, unpairSuperset, cleanupSg, applyIntensifierPlan, pinnedNoteFor, exNoteFor, setsRepsOf, sessionVolume } from '../lib/history.js'
 import { backoffShapeOf } from '../lib/backoff.js'
+import { cleanTempo, topRpeOf } from '../lib/cues.js'
 import { cleanNum, fmtNum, fmtPlate, fmtVol, exerciseNameText, fmtDate, fmtDaysAgo, todayISO, exCount, DAYN } from '../lib/format.js'
 import { speedUnitOf, toSpeed, fromSpeed } from '../lib/speed.js'
 import { clampIncline, hasIncline, inclineFits, inclineFrom, INCLINE_STEP } from '../lib/incline.js'
@@ -299,8 +300,12 @@ function ExerciseBlock({ entryIdx, compact, dense, editing, onToggle, onToggleSi
     const note = todaySets !== (planned.sets || 1) || !inPlan
       ? t('today {0}', setsRepsOf({ mode, sets: todaySets, reps: today.reps, sec: today.sec }))
       : entry.carried ? t('reps from your last session') : null
+    // The slot's tempo and top-set effort (lib/cues.js), on the scale the profile logs in.
+    const tempo = cleanTempo(today.tempo)
+    const rpe = mode === 'reps' ? topRpeOf(today) : 0
+    const cue = [tempo && t('Tempo {0}', tempo), rpe && t('top set {0}', effortOf(S) === 'rir' ? `RIR ${fmtNum(10 - rpe)}` : `RPE ${fmtNum(rpe)}`)].filter(Boolean).join(' · ')
     return <div className="small dim planline" style={{ marginBottom: 4 }}>
-      {t('Plan: {0}', setsRepsOf({ ...planned, mode }))}{note ? ' · ' + note : ''}
+      {t('Plan: {0}', setsRepsOf({ ...today, ...planned, mode }))}{note ? ' · ' + note : ''}{cue ? ' · ' + cue : ''}
     </div>
   })()
   // What the rows are held against (#173): the last time in this routine (#216), or the best set
