@@ -16,19 +16,24 @@ const USERS = [{ id: 'u_test_1', name: 'One', created: new Date().toISOString() 
 // localhost resolves to a loopback address, which PUSH_AGENT refuses: the send fails quietly.
 const subs = [{ userId: 'u_test_1', endpoint: 'https://localhost/x', keys: { p256dh: 'p', auth: 'a' }, created: new Date().toISOString() }];
 
+const SECRET = crypto.randomBytes(32).toString('hex');
+// Same construction as server.js makeSession(): payload `uid:exp:sv`, HMAC-SHA256 over SECRET.
+const payload = `u_test_1:${Date.now() + 86400000}:0`;
+const cookie = { Cookie: `gymsid=${payload}.${crypto.createHmac('sha256', SECRET).update(payload).digest('base64url')}` };
+
 async function startServer(t) {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gym-habits-'));
-  fs.writeFileSync(path.join(dataDir, 'secret'), crypto.randomBytes(32).toString('hex'), { mode: 0o600 });
+  fs.writeFileSync(path.join(dataDir, 'secret'), SECRET, { mode: 0o600 });
   fs.writeFileSync(path.join(dataDir, 'db.json'), JSON.stringify({ users: USERS, creds: [], subs, invites: [] }));
   const child = spawn(process.execPath, ['server.js'], {
     cwd: API, stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, PORT: '0', DATA_DIR: dataDir, ORIGIN: 'http://localhost:8080', RP_ID: 'localhost', REMINDER_TICK_MS: '100' }
+    env: { ...process.env, PORT: '0', DATA_DIR: dataDir, ORIGIN: 'http://localhost:8080', RP_ID: 'localhost', REMINDER_TICK_MS: '100', HABIT_SNOOZE_MS: '400' }
   });
-  const h = { dataDir, child, log: '' };
+  const h = { dataDir, child, log: '', api: '' };
   child.stdout.on('data', d => h.log += d);
   child.stderr.on('data', d => h.log += d);
   t.after(() => { child.kill('SIGKILL'); fs.rmSync(dataDir, { recursive: true, force: true }); });
-  await boundPort(child, () => h.log);
+  h.api = `http://127.0.0.1:${await boundPort(child, () => h.log)}`;
   return h;
 }
 
@@ -62,3 +67,25 @@ test('a habit time is pushed once; a ticked one is not pushed at all', async t =
   const db = JSON.parse(fs.readFileSync(path.join(h.dataDir, 'db.json'), 'utf8'));
   assert.deepEqual(db.users[0].habitSent, [key]);
 });
+
+test('In 10 min sends it again once, and a junk key is refused', async t => {
+  const h = await startServer(t);
+  const at = utc(2);
+  if (at.date !== utc().date) return t.skip('midnight UTC: the time would be yesterday');
+  fs.writeFileSync(path.join(h.dataDir, 'state-u_test_1.json'), JSON.stringify({ habits: { c: { name: 'Creatine', times: [at.hhmm], tz: 'UTC', _ts: 1 } } }));
+  const firings = () => (h.log.match(/habit firing/g) || []).length;
+  let deadline = Date.now() + 15000;
+  while (Date.now() < deadline && !firings()) await wait(100);
+  assert.equal(firings(), 1, h.log);
+
+  const post = key => fetch(`${h.api}/api/habits/snooze`, { method: 'POST', headers: { ...cookie, 'Content-Type': 'application/json', Origin: 'http://localhost:8080' }, body: JSON.stringify({ key }) });
+  assert.equal((await post('nope')).status, 400);
+  assert.equal((await post(`${at.date}|c|${at.hhmm}`)).status, 200);
+  deadline = Date.now() + 5000;
+  while (Date.now() < deadline && firings() < 2) await wait(100);
+  await wait(600);   // more ticks and past another snooze length: once, not again
+  assert.equal(firings(), 2, h.log);
+  const db = JSON.parse(fs.readFileSync(path.join(h.dataDir, 'db.json'), 'utf8'));
+  assert.deepEqual(db.users[0].habitSnooze, {});
+});
+

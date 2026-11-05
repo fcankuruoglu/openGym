@@ -15,7 +15,7 @@ import { effectiveRoutineIds } from './history.js'
 import { NUDGE_COPY, lineIndex, nudgeFor, nudgeMinute, toneOf } from './nudge.js'
 import { excusedOn } from './day-notes.js'
 import { stateJson } from './state-json.js'
-import { habitNotifications } from './habits.js'
+import { habitNotifications, HABIT_PUSH, HABIT_KEY, SNOOZE_MIN } from './habits.js'
 
 export const MOBILE = import.meta.env.VITE_MOBILE === '1'
 
@@ -263,6 +263,33 @@ export async function syncReminder(S, interactive = false) {
     await check(notifications)
     return true
   } catch (e) { return false }
+}
+
+// The habit reminders' buttons (lib/habits.js HABIT_PUSH): Taken ticks the time off through
+// `mark(key)`, the store's own update, so it syncs like a tick on Home; In 10 min plans the same
+// notification again. The snooze has an id past HABIT_NOTES, so a resync does not take it back.
+const HABIT_SNOOZE_ID = HABIT_ID_BASE + HABIT_NOTES
+let habitActionsStarted = false
+export function initHabitActions(mark) {
+  if (!MOBILE || habitActionsStarted) return
+  habitActionsStarted = true
+  import('@capacitor/local-notifications').then(async ({ LocalNotifications }) => {
+    await LocalNotifications.registerActionTypes({ types: [{ id: 'habit', actions: [
+      { id: 'done', title: t(HABIT_PUSH.done) }, { id: 'snooze', title: t(HABIT_PUSH.snooze) },
+    ] }] })
+    return LocalNotifications.addListener('localNotificationActionPerformed', e => {
+      const n = e?.notification
+      const key = n?.extra?.habit
+      if (!HABIT_KEY.test(key || '')) return
+      if (e.actionId === 'done') mark(key)
+      else if (e.actionId === 'snooze') {
+        LocalNotifications.schedule({ notifications: [{
+          id: HABIT_SNOOZE_ID, title: n.title, body: n.body, actionTypeId: 'habit', extra: n.extra,
+          schedule: { at: new Date(Date.now() + SNOOZE_MIN * 60000), allowWhileIdle: true },
+        }] }).catch(() => {})
+      }
+    })
+  }).catch(() => {})
 }
 
 // Capacitor emits appStateChange when the native shell returns to the foreground. The visibility

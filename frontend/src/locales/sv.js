@@ -3741,4 +3741,12 @@ export default {
   "Bedtime": "Före sängen",
   "Weekdays": "Vardagar",
   "Weekend": "Helg",
+  "Running low: {0} days left.": "Börjar ta slut: {0} dagar kvar.",
+  "Taken": "Tagit",
+  "In 10 min": "Om 10 min",
+  "{0} ticked off": "{0} avbockad",
+  "{0} days in a row": "{0} dagar i rad",
+  "{0}% in the last 30 days": "{0} % de senaste 30 dagarna",
+  "After workout": "Efter passet",
+  "After workout: on every day you log one, half an hour after it ends.": "Efter passet: varje dag du loggar ett, en halvtimme efter att det slutat.",
 }

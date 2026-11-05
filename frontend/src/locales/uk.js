@@ -3691,4 +3691,12 @@ export default {
   "Bedtime": "Перед сном",
   "Weekdays": "Будні",
   "Weekend": "Вихідні",
+  "Running low: {0} days left.": "Закінчується: залишилося днів: {0}.",
+  "Taken": "Прийняв",
+  "In 10 min": "За 10 хв",
+  "{0} ticked off": "{0}: позначено",
+  "{0} days in a row": "Днів поспіль: {0}",
+  "{0}% in the last 30 days": "{0}% за останні 30 днів",
+  "After workout": "Після тренування",
+  "After workout: on every day you log one, half an hour after it ends.": "Після тренування: щодня, коли ви записуєте тренування, через пів години після його завершення.",
 }

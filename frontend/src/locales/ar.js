@@ -3749,4 +3749,12 @@ export default {
   "Bedtime": "قبل النوم",
   "Weekdays": "أيام العمل",
   "Weekend": "عطلة نهاية الأسبوع",
+  "Running low: {0} days left.": "أوشك على النفاد: تبقّى {0} يوم.",
+  "Taken": "تناولته",
+  "In 10 min": "بعد 10 دقائق",
+  "{0} ticked off": "تم وضع علامة على {0}",
+  "{0} days in a row": "{0} يوم متتالٍ",
+  "{0}% in the last 30 days": "{0}٪ في آخر 30 يومًا",
+  "After workout": "بعد التمرين",
+  "After workout: on every day you log one, half an hour after it ends.": "بعد التمرين: في كل يوم تسجّل فيه تمرينًا، بعد نصف ساعة من انتهائه.",
 }

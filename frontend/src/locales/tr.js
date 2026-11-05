@@ -3694,4 +3694,12 @@ export default {
   "Bedtime": "Yatmadan önce",
   "Weekdays": "Hafta içi",
   "Weekend": "Hafta sonu",
+  "Running low: {0} days left.": "Azalıyor: {0} gün kaldı.",
+  "Taken": "Aldım",
+  "In 10 min": "10 dk sonra",
+  "{0} ticked off": "{0} işaretlendi",
+  "{0} days in a row": "{0} gündür kesintisiz",
+  "{0}% in the last 30 days": "Son 30 günde %{0}",
+  "After workout": "Antrenmandan sonra",
+  "After workout: on every day you log one, half an hour after it ends.": "Antrenmandan sonra: antrenman kaydettiğin her gün, bittikten yarım saat sonra.",
 }

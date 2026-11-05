@@ -3697,4 +3697,12 @@ export default {
   "Bedtime": "Lefekvés előtt",
   "Weekdays": "Hétköznap",
   "Weekend": "Hétvége",
+  "Running low: {0} days left.": "Fogy: még {0} nap.",
+  "Taken": "Bevettem",
+  "In 10 min": "10 perc múlva",
+  "{0} ticked off": "{0} kipipálva",
+  "{0} days in a row": "{0} napja egymás után",
+  "{0}% in the last 30 days": "{0}% az elmúlt 30 napban",
+  "After workout": "Edzés után",
+  "After workout: on every day you log one, half an hour after it ends.": "Edzés után: minden nap, amikor rögzítesz egyet, fél órával a vége után.",
 }
