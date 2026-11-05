@@ -2,6 +2,7 @@
 // one habit (its name, dose, times, days and stock). What is stored and how the stock is counted:
 // lib/habits.js. The ticks themselves are on Home (components/HabitsCard.jsx).
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { t } from '../lib/i18n.js'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
@@ -11,26 +12,32 @@ import { confirmSheet } from '../sheets.jsx'
 import { DAYN, uid, weekOrder, weekStartOf } from '../lib/format.js'
 import { MOBILE, syncReminder } from '../lib/mobile.js'
 import {
-  habitsOf, withHabit, stockLeft, daysLeft, toggleTime, toggleDay, sameDays,
+  habitsOf, withHabit, stockLeft, daysLeft, habitStats, toggleTime, toggleDay, sameDays, POST,
   HABIT_MAX, TIMES_MAX, NAME_MAX, DOSE_MAX, HABIT_TEMPLATES, TIME_PRESETS, DAY_PRESETS,
 } from '../lib/habits.js'
 
 const update = fn => useStore.getState().update(fn)
 
-export const timesLine = h => h.times.join(' · ')
-export const daysLine = (h, ws) => (h.days.length ? weekOrder(ws).filter(d => h.days.includes(d)).map(d => t(DAYN[d]).slice(0, 2)).join(' ') : t('Every day'))
+export const timeLabel = time => (time === POST ? t('After workout') : time)
+export const timesLine = h => [...h.times, ...(h.post ? [POST] : [])].map(timeLabel).join(' · ')
+// No clock time (after a workout only): its days say nothing.
+export const daysLine = (h, ws) => (!h.times.length ? '' : h.days.length ? weekOrder(ws).filter(d => h.days.includes(d)).map(d => t(DAYN[d]).slice(0, 2)).join(' ') : t('Every day'))
 
 export default function HabitsPage() {
   const S = useStore(s => s.S)
-  const [editing, setEditing] = useState(null)   // a habit's id, or 'new'
+  // A habit's id, or 'new': Home's + comes here with ?new and lands on the quick starts.
+  const fromHome = new URLSearchParams(useLocation().search).has('new')
+  const [editing, setEditing] = useState(fromHome ? 'new' : null)
   const habits = habitsOf(S)
   if (editing) return <HabitEditor S={S} id={editing} close={() => setEditing(null)} />
   return <>
     <Section footer={MOBILE ? t('The phone reminds you at each time until you tick it off on Home.') : t('A push at each time until you tick it off on Home. Turn on push notifications under Reminders first.')}>
       {habits.map(h => {
         const left = daysLeft(S, h.id)
+        const st = habitStats(S, h.id)
         return <Row key={h.id} icon="checkCircle" iconTint="var(--green)" title={h.name}
-          subtitle={[h.dose, timesLine(h), daysLine(h, weekStartOf(S)), left != null ? t('Days left: {0}', left) : ''].filter(Boolean).join(' · ')}
+          subtitle={[h.dose, timesLine(h), daysLine(h, weekStartOf(S)), left != null ? t('Days left: {0}', left) : '',
+            st?.streak >= 2 ? t('{0} days in a row', st.streak) : '', st?.rate != null ? t('{0}% in the last 30 days', Math.round(st.rate * 100)) : ''].filter(Boolean).join(' · ')}
           accessory="chevron" onClick={() => setEditing(h.id)} />
       })}
       {habits.length < HABIT_MAX && <Row icon="plusCircle" iconTint="var(--green)" title={t('Add a habit')} onClick={() => setEditing('new')} />}
@@ -43,7 +50,7 @@ function HabitEditor({ S, id, close }) {
   const old = habitsOf(S).find(h => h.id === id)
   const oldLeft = old ? stockLeft(S, id) : null
   const [d, setD] = useState(() => ({
-    name: old?.name || '', dose: old?.dose || '', times: old?.times || ['08:00'], days: old?.days || [],
+    name: old?.name || '', dose: old?.dose || '', times: old?.times || ['08:00'], days: old?.days || [], post: !!old?.post,
     counted: !!old?.stock, n: oldLeft ?? 30, per: old?.stock?.per ?? 1,
   }))
   const set = patch => setD(x => ({ ...x, ...patch }))
@@ -53,7 +60,7 @@ function HabitEditor({ S, id, close }) {
     // The count typed in starts a new count; left alone, the old one keeps counting.
     const same = old?.stock && d.n === oldLeft && d.per === old.stock.per
     const stock = d.counted && d.per > 0 ? (same ? old.stock : { n: d.n, at: Date.now(), per: d.per }) : null
-    const habit = { name: d.name, dose: d.dose, times: d.times, days: d.days, stock }
+    const habit = { name: d.name, dose: d.dose, times: d.times, days: d.days, post: d.post, stock }
     const key = old ? id : uid()
     update(s => { s.habits = withHabit(s.habits, key, habit) })
     // The phone asks for permission here, once, rather than from a background resync.
@@ -66,7 +73,9 @@ function HabitEditor({ S, id, close }) {
     confirmText: t('Remove'), danger: true,
     onConfirm: () => { update(s => { s.habits = withHabit(s.habits, id, null) }); close() },
   })
-  const valid = d.name.trim() && d.times.length > 0
+  const valid = d.name.trim() && (d.times.length > 0 || d.post)
+  // After a workout can be a habit's only time; switched off with no clock time left, it gets one.
+  const togglePost = () => set(d.post ? { post: false, times: d.times.length ? d.times : ['08:00'] } : { post: true })
   // A quick start fills the form in this language; everything stays editable after.
   const pick = tpl => set({ name: t(tpl.name), dose: t(tpl.dose), times: tpl.times })
   const picked = tpl => d.name === t(tpl.name)
@@ -92,14 +101,15 @@ function HabitEditor({ S, id, close }) {
           enterKeyHint="done" autoComplete="off" onChange={e => set({ dose: e.target.value })} />
       </label>
     </Section>
-    <Section title={t('Times')}>
+    <Section title={t('Times')} footer={d.post ? t('After workout: on every day you log one, half an hour after it ends.') : null}>
       <div className="chips wrap habit-chips">
         {TIME_PRESETS.map(p => <button key={p.time} type="button" className={'chip' + (d.times.includes(p.time) ? ' on' : '')}
-          aria-pressed={d.times.includes(p.time)} onClick={() => set({ times: toggleTime(d.times, p.time) })}>{t(p.label)} <span className="dim">{p.time}</span></button>)}
+          aria-pressed={d.times.includes(p.time)} onClick={() => set({ times: toggleTime(d.times, p.time, !d.post) })}>{t(p.label)} <span className="dim">{p.time}</span></button>)}
+        <button type="button" className={'chip' + (d.post ? ' on' : '')} aria-pressed={d.post} onClick={togglePost}>{t('After workout')}</button>
       </div>
       {d.times.map((time, i) => <Row key={i} icon="clock" iconTint="var(--purple)" title={t('At')}>
         <input type="time" className="timef" value={time} aria-label={t('At')} onChange={e => e.target.value && setTime(i, e.target.value)} />
-        {d.times.length > 1 && <Button size="sm" icon="xmark" aria-label={t('Remove')} onClick={() => set({ times: d.times.filter((_, j) => j !== i) })} />}
+        {(d.times.length > 1 || d.post) && <Button size="sm" icon="xmark" aria-label={t('Remove')} onClick={() => set({ times: d.times.filter((_, j) => j !== i) })} />}
       </Row>)}
       {d.times.length < TIMES_MAX && <Row icon="plusCircle" iconTint="var(--purple)" title={t('Add a time')} onClick={() => set({ times: [...d.times, '12:00'] })} />}
     </Section>

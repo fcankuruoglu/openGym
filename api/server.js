@@ -42,7 +42,7 @@ import { ipv6Groups, guardedLookup, pushEndpointError, MAX_PUSH_ENDPOINT } from 
 import { createIntegrations } from './integrations/index.js';
 import { integrationRoutes } from './integrations/routes.js';
 import { excusedOn, nudgeFor, nudgeWindowOpen, toneOf } from './nudge.js';
-import { habitsDue } from './habits.js';
+import { HABIT_KEY, habitByKey, habitsDue } from './habits.js';
 import { wrappedPushYear, wrappedSummary, wrappedPushOwed, wrappedPush } from './wrapped.js';
 
 const PORT = +(process.env.PORT || 3000);
@@ -504,12 +504,24 @@ function wrappedTick(user, sum, year) {
 // its key (date, habit, time) is kept in db.json (`user.habitSent`) before the send, the newest
 // HABIT_SENT_MAX of them, far more than a day can hold. Independent of the workout reminder.
 const HABIT_SENT_MAX = 200;
+// In 10 min (POST /api/habits/snooze): `user.habitSnooze` = { [key]: when }, sent again then, once,
+// unless it was ticked or skipped meanwhile. Gone a day after it was due, sent or not.
+const HABIT_SNOOZE_MS = Math.max(50, +(process.env.HABIT_SNOOZE_MS || 600000) || 600000);   // the tests shorten it
+const HABIT_SNOOZE_MAX = 20;
 function habitTick(user) {
   const S = readStateCached(user.id);
   const sent = new Set(Array.isArray(user.habitSent) ? user.habitSent : []);
   const due = habitsDue(S, userNow, REMINDER_WINDOW_MIN).filter(h => !sent.has(h.key));
+  const snoozed = user.habitSnooze && typeof user.habitSnooze === 'object' ? user.habitSnooze : {};
+  for (const [key, at] of Object.entries(snoozed)) {
+    if (!(Date.now() >= at)) continue;
+    delete snoozed[key];
+    const h = Date.now() - at < 86400000 && habitByKey(S, key);
+    if (h) due.push(h);
+    saveDb();
+  }
   if (!due.length) return;
-  user.habitSent = [...sent, ...due.map(h => h.key)].slice(-HABIT_SENT_MAX);
+  user.habitSent = [...new Set([...sent, ...due.map(h => h.key)])].slice(-HABIT_SENT_MAX);
   saveDb();
   for (const h of due) {
     console.log('habit firing', user.id, h.key);
@@ -2725,6 +2737,21 @@ const routes = {
     if (!user) return json(res, 401, { error: 'not signed in' });
     if (pushThrottled(res, PUSH_TESTS, user)) return;
     await sendPush(user.id, testPush(readStateCached(user.id)?.lang));
+    json(res, 200, { ok: true });
+  },
+
+  // A habit reminder's In 10 min (public/sw.js): the server sends it again in ten minutes. Kept in
+  // db.json like the other reminder marks, never in the profile: the app's own sync is the only
+  // writer of that. At most HABIT_SNOOZE_MAX at a time.
+  'POST /api/habits/snooze': async (req, res) => {
+    const user = readSession(req);
+    if (!user) return json(res, 401, { error: 'not signed in' });
+    const body = await readBody(req);
+    if (typeof body.key !== 'string' || !HABIT_KEY.test(body.key)) return json(res, 400, { error: 'key required' });
+    const snoozed = user.habitSnooze && typeof user.habitSnooze === 'object' ? user.habitSnooze : {};
+    snoozed[body.key] = Date.now() + HABIT_SNOOZE_MS;
+    user.habitSnooze = Object.fromEntries(Object.entries(snoozed).slice(-HABIT_SNOOZE_MAX));
+    saveDb();
     json(res, 200, { ok: true });
   },
 

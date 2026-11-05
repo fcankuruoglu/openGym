@@ -3698,4 +3698,12 @@ export default {
   "Bedtime": "Перед сном",
   "Weekdays": "Будни",
   "Weekend": "Выходные",
+  "Running low: {0} days left.": "Заканчивается: осталось дней: {0}.",
+  "Taken": "Принял",
+  "In 10 min": "Через 10 мин",
+  "{0} ticked off": "{0}: отмечено",
+  "{0} days in a row": "Дней подряд: {0}",
+  "{0}% in the last 30 days": "{0}% за последние 30 дней",
+  "After workout": "После тренировки",
+  "After workout: on every day you log one, half an hour after it ends.": "После тренировки: в каждый день с записанной тренировкой, через полчаса после её конца.",
 }

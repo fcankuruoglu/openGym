@@ -3714,4 +3714,12 @@ export default {
   "Bedtime": "Vor dem Schlafen",
   "Weekdays": "Werktags",
   "Weekend": "Wochenende",
+  "Running low: {0} days left.": "Geht zur Neige: noch {0} Tage.",
+  "Taken": "Genommen",
+  "In 10 min": "In 10 Min.",
+  "{0} ticked off": "{0} abgehakt",
+  "{0} days in a row": "{0} Tage in Folge",
+  "{0}% in the last 30 days": "{0} % in den letzten 30 Tagen",
+  "After workout": "Nach dem Training",
+  "After workout: on every day you log one, half an hour after it ends.": "Nach dem Training: an jedem Tag mit einem Training, eine halbe Stunde nach seinem Ende.",
 }

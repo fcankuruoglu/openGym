@@ -3694,4 +3694,12 @@ export default {
   "Bedtime": "सोने से पहले",
   "Weekdays": "कामकाजी दिन",
   "Weekend": "सप्ताहांत",
+  "Running low: {0} days left.": "खत्म होने वाला है: {0} दिन बचे।",
+  "Taken": "ले लिया",
+  "In 10 min": "10 मिनट में",
+  "{0} ticked off": "{0} टिक हो गया",
+  "{0} days in a row": "लगातार {0} दिन",
+  "{0}% in the last 30 days": "पिछले 30 दिनों में {0}%",
+  "After workout": "वर्कआउट के बाद",
+  "After workout: on every day you log one, half an hour after it ends.": "वर्कआउट के बाद: जिस भी दिन आप वर्कआउट लॉग करें, उसके खत्म होने के आधे घंटे बाद।",
 }

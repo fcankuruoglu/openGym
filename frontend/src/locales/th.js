@@ -3705,4 +3705,12 @@ export default {
   "Bedtime": "ก่อนนอน",
   "Weekdays": "วันธรรมดา",
   "Weekend": "สุดสัปดาห์",
+  "Running low: {0} days left.": "ใกล้หมด: เหลืออีก {0} วัน",
+  "Taken": "ทานแล้ว",
+  "In 10 min": "อีก 10 นาที",
+  "{0} ticked off": "ติ๊ก {0} แล้ว",
+  "{0} days in a row": "ติดต่อกัน {0} วัน",
+  "{0}% in the last 30 days": "{0}% ใน 30 วันที่ผ่านมา",
+  "After workout": "หลังออกกำลังกาย",
+  "After workout: on every day you log one, half an hour after it ends.": "หลังออกกำลังกาย: ทุกวันที่คุณบันทึกการฝึก ครึ่งชั่วโมงหลังจบ",
 }

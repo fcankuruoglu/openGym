@@ -2483,6 +2483,14 @@ export const PT_BR_OVERRIDES = {
   "Bedtime": "Antes de dormir",
   "Weekdays": "Dias úteis",
   "Weekend": "Fim de semana",
+  "Running low: {0} days left.": "Está acabando: faltam {0} dias.",
+  "Taken": "Tomei",
+  "In 10 min": "Em 10 min",
+  "{0} ticked off": "{0} marcado",
+  "{0} days in a row": "{0} dias seguidos",
+  "{0}% in the last 30 days": "{0}% nos últimos 30 dias",
+  "After workout": "Depois do treino",
+  "After workout: on every day you log one, half an hour after it ends.": "Depois do treino: em todo dia em que você registrar um, meia hora depois que ele terminar.",
 }
 
 export default { ...pt, ...PT_BR_OVERRIDES }

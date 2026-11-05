@@ -3694,4 +3694,12 @@ export default {
   "Bedtime": "睡前",
   "Weekdays": "工作日",
   "Weekend": "周末",
+  "Running low: {0} days left.": "快用完了：还剩 {0} 天。",
+  "Taken": "已服用",
+  "In 10 min": "10 分钟后",
+  "{0} ticked off": "已勾选 {0}",
+  "{0} days in a row": "连续 {0} 天",
+  "{0}% in the last 30 days": "最近 30 天 {0}%",
+  "After workout": "训练后",
+  "After workout: on every day you log one, half an hour after it ends.": "训练后：每个记录了训练的日子，在训练结束半小时后。",
 }

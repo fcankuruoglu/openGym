@@ -2398,6 +2398,40 @@ paths:
               schema: { $ref: '#/components/schemas/Ok' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /api/habits/snooze:
+    post:
+      tags: [push]
+      operationId: habitSnooze
+      summary: Remind me about a daily habit again in 10 minutes
+      description: >-
+        The "In 10 min" button of a daily-habit push. The server sends that habit's
+        reminder again ten minutes later, unless the time was ticked off or skipped
+        in the meantime. Kept in db.json, the profile is not written.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key]
+              properties:
+                key:
+                  type: string
+                  description: The habit time, `YYYY-MM-DD|<habit id>|HH:MM`.
+                  example: '2026-11-05|m1abc|08:00'
+      responses:
+        '200':
+          description: Snoozed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ok' }
+        '400':
+          description: '`key` missing or not a habit time.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: "key required" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /api/push/test:
     post:
       tags: [push]

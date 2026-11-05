@@ -3694,4 +3694,12 @@ export default {
   "Bedtime": "자기 전",
   "Weekdays": "평일",
   "Weekend": "주말",
+  "Running low: {0} days left.": "얼마 안 남았어요: {0}일 남음.",
+  "Taken": "먹었어요",
+  "In 10 min": "10분 후",
+  "{0} ticked off": "{0} 체크 완료",
+  "{0} days in a row": "{0}일 연속",
+  "{0}% in the last 30 days": "최근 30일 동안 {0}%",
+  "After workout": "운동 후",
+  "After workout: on every day you log one, half an hour after it ends.": "운동 후: 운동을 기록한 날마다, 끝난 지 30분 뒤에.",
 }
