@@ -7,7 +7,7 @@ import { hasIncline, inclineFrom } from './incline.js'
 import { isCardio, isHold, isOneLimb, isBodyweightEq, isAssisted, betterWeight } from './exercises.js'
 import { barWeightFor } from './bar.js'
 import { phaseForSet, modeForSet, modeForEntry, isWarmupRow, isFailureSet, isDropSet, isRestPauseSet, normalizeMode, completedVolumeOf, hasCompletedWork, nextDropWeight, splitBurstReps, makeSideSet, isSideSet, syncSideAggregate, WEIGHT_ORIGIN_MANUAL, dropsOf, clustersOf } from './workout-model.js'
-import { backoffAfter, backoffShapeOf, backoffStepOf, backoffWeights } from './backoff.js'
+import { backoffAfter, backoffShapeOf, backoffStepOf, backoffWeights, isBackoff } from './backoff.js'
 import { dbLoadOf, bellsIn, volumeFactor, historyAs, ownedFloor } from './dumbbells.js'
 import { isRungRow, rungWeight } from './warmup-snap.js'
 import { bodyLoadOf, bodyweightFor, countsBodyweight } from './bw-load.js'
@@ -245,6 +245,11 @@ export function setsRepsOf(cfg) {
   if (isPyramid(cfg)) return pyramidLabel(cfg.pyramid)
   // Triple progression's set range reads as a range too: "3–5 × 8–12".
   const sets = cfg.setsMax > n ? `${n}–${cfg.setsMax}` : n
+  // Top sets and back-off sets of their own shape read apart: "2 × 8 + 1 × 10 (−15%)".
+  const bo = isBackoff(cfg) ? backoffShapeOf(cfg) : null
+  if (bo && (bo.tops > 1 || bo.reps || bo.pct) && n > bo.tops) {
+    return `${bo.tops} × ${repsOf(cfg)} + ${n - bo.tops} × ${bo.reps || repsOf(cfg)}` + (bo.pct ? ` (−${bo.pct}%)` : '')
+  }
   return `${sets} × ${repsOf(cfg)}`
 }
 
