@@ -2491,6 +2491,10 @@ export const PT_BR_OVERRIDES = {
   "{0}% in the last 30 days": "{0}% nos últimos 30 dias",
   "After workout": "Depois do treino",
   "After workout: on every day you log one, half an hour after it ends.": "Depois do treino: em todo dia em que você registrar um, meia hora depois que ele terminar.",
+  "Yesterday": "Ontem",
+  "Previous day": "Dia anterior",
+  "Next day": "Próximo dia",
+  "Nothing planned for this day.": "Nada planejado para este dia.",
 }
 
 export default { ...pt, ...PT_BR_OVERRIDES }

@@ -3699,4 +3699,8 @@ export default {
   "{0}% in the last 30 days": "{0}% за останні 30 днів",
   "After workout": "Після тренування",
   "After workout: on every day you log one, half an hour after it ends.": "Після тренування: щодня, коли ви записуєте тренування, через пів години після його завершення.",
+  "Yesterday": "Учора",
+  "Previous day": "Попередній день",
+  "Next day": "Наступний день",
+  "Nothing planned for this day.": "На цей день нічого не заплановано.",
 }
