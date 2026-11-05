@@ -3087,7 +3087,7 @@ button.wl-summary{width:100%;padding:0 0 10px;text-align:start;border-radius:var
    styles load with them (components/Wrapped.css). */
 .wr-home{position:relative;overflow:hidden;background:var(--surface);background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 24%,var(--surface)),var(--surface) 72%)}
 .wr-home>.btn{margin-top:12px}
-.stp .val .stp-word{font-weight:600;min-width:2.5em;text-align:center;display:inline-block}
+.stp .val .stp-word{font-weight:600;min-width:2.5em;text-align:center;display:inline-block;align-self:center}
 
 /* ------------------------------------------------- 1.4.5 insight cards -- */
 /* Weekly sets per muscle (components/WeeklySets.jsx), strength levels (StrengthLevel.jsx) and the
