@@ -2187,6 +2187,7 @@ export default {
   'Muscle map': 'পেশির মানচিত্র',
   'Show which muscles this workout trained.': 'এই ওয়ার্কআউটে কোন পেশিগুলো কাজ করেছে তা দেখান।',
   'Preview of the image to share': 'শেয়ার করার ছবির প্রিভিউ',
+  'Add back-off set': 'ব্যাক-অফ সেট যোগ করুন',
   'Back-off sets': 'ব্যাক-অফ সেট',
   'Top sets': 'টপ সেট',
   'Lighter by (%)': 'কম ওজন (%)',

@@ -3639,14 +3639,14 @@ describe('the workout screen chrome (v1.3.11)', () => {
     expect(mocks.exercisePicker).toHaveBeenCalledOnce()
   })
 
-  // v1.4.4 ("the ⋯ menu has a lot lot lot"): the five reached for at the gym on show, the rest in
+  // v1.4.4 ("the ⋯ menu has a lot lot lot"): the ones reached for at the gym on show (back-off beside warm-up), the rest in
   // one More fold, grouped, and Remove on its own at the end.
-  it('groups the exercise menu: five on show, the rest under More, and Remove on its own', async () => {
+  it('groups the exercise menu: six on show, the rest under More, and Remove on its own', async () => {
     await mount([exercise('plain-bench', [false]), exercise('plain-row', [false])])
     await openMore()
     const groupsOf = sections => sections.map(g => g.more ? ['More', groupsOf(g.more)] : [g.title, g.items.filter(Boolean).map(it => it.label)])
     expect(groupsOf(lastMenu().sections)).toEqual([
-      [undefined, ['Add note', 'Swap exercise', 'Add warm-up set', 'Rest timer', 'History']],
+      [undefined, ['Add note', 'Swap exercise', 'Add warm-up set', 'Add back-off set', 'Rest timer', 'History']],
       ['More', [
         ['Exercise', ['Exercise settings', 'Plate loading', 'How to do it']],
         ['Order and supersets', ['Make superset with next', 'Move up', 'Move down']],
@@ -3663,7 +3663,7 @@ describe('the workout screen chrome (v1.3.11)', () => {
     await openMore()
     const today = lastMenu().sections[0].items.filter(Boolean)
     const name = exerciseNameText(EXIDX['0047'])
-    expect(today.map(it => it.label)).toEqual(['Add note', 'Swap exercise', 'Swap to ' + name, 'Add warm-up set', 'Rest timer', 'History'])
+    expect(today.map(it => it.label)).toEqual(['Add note', 'Swap exercise', 'Swap to ' + name, 'Add warm-up set', 'Add back-off set', 'Rest timer', 'History'])
     expect(item('Swap to ' + name).sub).toBe('Planned backup, same sets and reps')
     item('Swap to ' + name).onClick()
     expect(mocks.swapActiveWorkoutToBackup).toHaveBeenCalledWith(0, '0047')

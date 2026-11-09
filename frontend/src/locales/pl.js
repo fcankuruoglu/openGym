@@ -2096,6 +2096,7 @@ export default {
   'rehab': 'rehabilitacja',
   'Any type': 'Dowolny typ',
   'Suggest a fix for this exercise': 'Zaproponuj poprawkę do tego ćwiczenia',
+  'Add back-off set': 'Dodaj serię zejściową',
   'Back-off sets': 'Serie zejściowe',
   'Top sets': 'Serie główne',
   'Lighter by (%)': 'Lżej o (%)',

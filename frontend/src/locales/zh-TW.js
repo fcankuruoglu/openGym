@@ -2089,6 +2089,7 @@ export default {
   'rehab': '復健',
   'Any type': '不限類型',
   'Suggest a fix for this exercise': '為此動作提出修正建議',
+  'Add back-off set': '新增遞減組',
   'Back-off sets': '遞減組',
   'Top sets': '頂組',
   'Lighter by (%)': '減輕 (%)',

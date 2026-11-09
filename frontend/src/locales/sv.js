@@ -2117,6 +2117,7 @@ export default {
   'rehab': 'rehab',
   'Any type': 'Valfri typ',
   'Suggest a fix for this exercise': 'Föreslå en rättelse för den här övningen',
+  'Add back-off set': 'Lägg till back-off-set',
   'Back-off sets': 'Back-off-set',
   'Top sets': 'Toppset',
   'Lighter by (%)': 'Lättare med (%)',

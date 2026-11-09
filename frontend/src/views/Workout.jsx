@@ -11,7 +11,7 @@ import { bestsFor, lastRowFor, oddValues } from '../lib/typo-check.js'
 import { usesBar } from '../lib/bar.js'
 import { loadKindFor, baseWeightFor, inventoryFor, rowLoad, sameLoad, plateDelta, dropGrid } from '../lib/plates.js'
 import { effectiveRoutines, effectiveRoutineIds, lastEntryFor, bestWeightFor, bestWeightForEntry, freestyleConfig, pickedExerciseConfig, setsDoneActive, setUnitsTotal, supersetUnits, unitOf, setLabel, modeOf, isBw, isPerSide, repStep, EFFORT, effortOf, stepEffort, capEffort, cascadeWeight, liveReramp, insertWarmupRow, barFloor, makeWarmupAt, canBeWarmup, makeWorkAt, removeRowAt, removeLastSet, setSpanAt, copyRowAt, copySpanAt, insertRowAt, pairAdjacent, unpairSuperset, cleanupSg, applyIntensifierPlan, pinnedNoteFor, exNoteFor, setsRepsOf, sessionVolume } from '../lib/history.js'
-import { backoffShapeOf } from '../lib/backoff.js'
+import { backoffShapeOf, nextBackoffRow } from '../lib/backoff.js'
 import { cleanTempo, topRpeOf } from '../lib/cues.js'
 import { cleanNum, fmtNum, fmtPlate, fmtVol, exerciseNameText, fmtDate, fmtDaysAgo, todayISO, exCount, DAYN } from '../lib/format.js'
 import { speedUnitOf, toSpeed, fromSpeed } from '../lib/speed.js'
@@ -141,7 +141,7 @@ const RTL_LETTER = /[֐-ࣿיִ-﷿ﹰ-﻿]/
 // enough to turn over, far shorter than the rest the set earns once both sides are held.
 const SWITCH_SIDES_SEC = 10
 
-function ExerciseBlock({ entryIdx, compact, dense, editing, onToggle, onToggleSide, onField, onAddSet, onRemoveSet, onAddWarmup, onKeepWarmups, onAskCoach, onRemoveSetAt, onCopySetAt, onStartTimed, onPairPrev, onPairNext, onSetRowRef, onProgressionSettings, onRest, onNoProg, routineUpdate, onSwap, onSwapBackup, onMoveUp, onMoveDown, canMoveUp, canMoveDown, onRemoveExercise, busy }) {
+function ExerciseBlock({ entryIdx, compact, dense, editing, onToggle, onToggleSide, onField, onAddSet, onRemoveSet, onAddWarmup, onAddBackoff, onKeepWarmups, onAskCoach, onRemoveSetAt, onCopySetAt, onStartTimed, onPairPrev, onPairNext, onSetRowRef, onProgressionSettings, onRest, onNoProg, routineUpdate, onSwap, onSwapBackup, onMoveUp, onMoveDown, canMoveUp, canMoveDown, onRemoveExercise, busy }) {
   // The block reads the state as its exercise sees it (lib/ex-unit.js): in the exercise's own
   // weight unit when it has one (#657), so its rows, steppers, plates, owned weights, "last time"
   // and records all speak that unit. Every change goes through inEntryUnit or the parent's
@@ -496,6 +496,7 @@ function ExerciseBlock({ entryIdx, compact, dense, editing, onToggle, onToggleSi
         // The slot's planned backups (#649), one tap each: the machine is taken, the plan says what next.
         ...(onSwapBackup ? backups.map(b => ({ icon: 'swap', label: t('Swap to {0}', exerciseNameText(b)), sub: t('Planned backup, same sets and reps'), onClick: () => onSwapBackup(b.id), disabled: busy })) : []),
         { icon: 'sunrise', label: t('Add warm-up set'), onClick: onAddWarmup },
+        onAddBackoff && { icon: 'arrowDown', label: t('Add back-off set'), onClick: onAddBackoff },
         // Today's warm-ups as the routine's own from now on (#525, lib/warmup-ramp.js).
         onKeepWarmups && { icon: 'sunrise', label: t('Keep these warm-ups'), sub: t('Saved in the routine, scaled to your work weight'), onClick: onKeepWarmups },
         onRest && { icon: 'timer', label: t('Rest timer'), sub: restSub, onClick: onRest },
@@ -921,6 +922,7 @@ function ExerciseBlock({ entryIdx, compact, dense, editing, onToggle, onToggleSi
       <div style={{ height: 8 }} />
       {wc.setShortcuts ? <div className="row" style={{ flexWrap: 'wrap' }}>
         <Button size="sm" icon="sunrise" onClick={onAddWarmup}>{t('Add warm-up set')}</Button>
+        {onAddBackoff && <Button size="sm" icon="arrowDown" onClick={onAddBackoff}>{t('Add back-off set')}</Button>}
         <Button size="sm" icon="minus" disabled={entry.sets.length <= setSpanAt(entry.sets, entry.sets.length - 1)[1]} onClick={onRemoveSet}>{t('Remove set')}</Button>
         <Button size="sm" icon="plus" onClick={onAddSet}>{t('Add set')}</Button>
       </div> : <Button size="sm" icon="plus" onClick={onAddSet}>{t('Add set')}</Button>}
@@ -1436,6 +1438,15 @@ function ActiveWorkout() {
     const added = at === -1 ? e.sets.length - 1 : at
     e.sets[added] = markWarmupEdited(e.sets[added])
   })
+  // A lighter set after the work sets (lib/backoff.js nextBackoffRow): loaded lifts only, where lighter is easier.
+  const backoffOffered = idx => {
+    const cfg = { ...(A.entries[idx].target || {}), id: A.entries[idx].id }
+    return modeOf(cfg) === 'reps' && !isBw(cfg) && !isAssisted(cfg)
+  }
+  const addBackoff = idx => mutEntry(idx, e => {
+    const row = nextBackoffRow(e.sets, { ...(e.target || {}), id: e.id }, exView(S, e.id).unit)
+    if (row) e.sets.push(row)
+  })
   // The set-number menu's Remove and the swipe both go through deleteActiveSet, Undo and all.
   const removeSetAt = (idx, i) => deleteActiveSet(idx, i, { editing })
   const pairAt = (first, second) => update(s => {
@@ -1582,6 +1593,7 @@ function ActiveWorkout() {
     onAddSet: () => addSet(idx),
     onRemoveSet: () => removeSet(idx),
     onAddWarmup: () => addWarmup(idx),
+    onAddBackoff: backoffOffered(idx) ? () => addBackoff(idx) : null,
     onKeepWarmups: keepWarmupsFor(idx),
     // Only with the Coach set up and agreed to, live (not a past workout), and something left to do.
     onAskCoach: coachGate.ok && hasConsent(S) && !editing && (A.entries[idx]?.sets || []).some(x => !isWarmupRow(x) && !x.done)

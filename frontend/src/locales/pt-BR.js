@@ -11,6 +11,7 @@ export const PT_BR_OVERRIDES = {
   'Top set RPE': 'RPE da série principal',
   'Top set RIR': 'RIR da série principal',
   'The top sets stay at the weight above, the rest are lighter.': 'As séries principais ficam no peso acima, as outras são mais leves.',
+  'Add back-off set': 'Adicionar série descendente',
   'Top sets': 'Séries principais',
   'Lighter by (%)': 'Mais leve em (%)',
   'Back-off reps': 'Reps descendentes',

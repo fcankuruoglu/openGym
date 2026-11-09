@@ -116,7 +116,7 @@ function PlateBadge({ S, entry, set }) {
 
 export default function FocusView({
   entryIdx, unit, onToggle, onToggleSide, onField, onMutateSet, onStartTimed,
-  onAddSet, onAddWarmup, onRemoveSetAt, onProgressionSettings, onSwap, onRemoveExercise,
+  onAddSet, onAddWarmup, onAddBackoff, onRemoveSetAt, onProgressionSettings, onSwap, onRemoveExercise,
   onNoProg, busy, onSelectEntry, onAdvanceUnit, onPairPrev, onPairNext, onUnpair, pointerEpoch,
 }) {
   // In the exercise's own weight unit when it has one (#657); the parent stores every change back.
@@ -250,6 +250,7 @@ export default function FocusView({
       { items: [
         { icon: 'plus', label: t('Add set'), onClick: addRow(onAddSet) },
         { icon: 'sunrise', label: t('Add warm-up set'), onClick: addRow(onAddWarmup) },
+        onAddBackoff && { icon: 'arrowDown', label: t('Add back-off set'), onClick: addRow(onAddBackoff) },
         { icon: 'note', label: entry.note ? t('Edit note') : t('Add note'), onClick: () => exerciseNoteSheet(entryIdx) },
         { icon: 'swap', label: t('Swap exercise'), onClick: onSwap, disabled: busy },
         { icon: 'history', label: t('History'), onClick: () => exerciseHistorySheet(entry.id) },

@@ -1,7 +1,7 @@
 // Back-off sets (lib/backoff.js): the top set is planned and progressed, every set after it is
 // one step lighter, and the sequence only moves up when every planned set reached its target.
 import { describe, it, expect } from 'vitest'
-import { isBackoff, backoffAt, backoffWeights, applyBackoff, backoffShapeOf, backoffShapeFields } from './backoff.js'
+import { isBackoff, backoffAt, backoffWeights, applyBackoff, backoffShapeOf, backoffShapeFields, nextBackoffRow } from './backoff.js'
 import { buildSessionEntries, buildSessionEntry } from './session-start.js'
 import { readSession, nextPrescription } from './progression.js'
 import { cascadeWeight } from './history.js'
@@ -265,5 +265,23 @@ describe('top sets and a back-off by share', () => {
     const rows = [{ w: 60, r: 8 }, { w: 60, r: 8 }, { w: 50, r: 10 }, { w: 50, r: 10 }]
     expect(cascadeWeight(rows, 0, 70, undefined, 2.5, shape).map(r => r.w)).toEqual([60, 70, 57.5, 57.5])
     expect(cascadeWeight(rows, 2, 45, undefined, 2.5, shape).map(r => r.w)).toEqual([60, 60, 50, 45])
+  })
+})
+
+describe('nextBackoffRow (Add back-off set)', () => {
+  const warm = { w: 20, r: 10, phase: 'warmup' }
+  it('continues a planned back-off sequence from the top set', () => {
+    const shape = { backoffStep: 2.5, backoffTops: 2, backoffPct: 15, backoffReps: 10, reps: 8 }
+    expect(nextBackoffRow([warm, { w: 60, r: 8 }, { w: 60, r: 8 }, { w: 50, r: 10 }], shape, 'kg')).toEqual({ w: 50, r: 10, done: false })
+    expect(nextBackoffRow([{ w: 60, r: 8 }, { w: 57.5, r: 8 }], { backoffStep: 2.5, reps: 8 }, 'kg')).toEqual({ w: 55, r: 8, done: false })
+  })
+  it('without a plan opens 10% (or the own share) under the last work set, kept as typed', () => {
+    expect(nextBackoffRow([{ w: 60, r: 8 }], { id: LIFT, inc: 2.5, reps: 8 }, 'kg')).toEqual({ w: 52.5, r: 8, done: false, weightOrigin: 'manual' })
+    expect(nextBackoffRow([{ w: 100, r: 5 }], { id: LIFT, inc: 2.5, backoffPct: 20, backoffReps: 8 }, 'kg')).toMatchObject({ w: 80, r: 8 })
+  })
+  it('adds a per-side row after a per-side set, and nothing when there is no work set', () => {
+    const row = nextBackoffRow([makeSideSet({ w: 20, r: 20 })], { id: LIFT, inc: 2, reps: 10 }, 'kg')
+    expect(row.sides.L).toMatchObject({ w: 18, r: 10 })
+    expect(nextBackoffRow([warm], { id: LIFT }, 'kg')).toBeNull()
   })
 })
