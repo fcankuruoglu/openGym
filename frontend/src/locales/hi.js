@@ -2096,6 +2096,7 @@ export default {
   'rehab': 'रिहैब',
   'Any type': 'कोई भी प्रकार',
   'Suggest a fix for this exercise': 'इस व्यायाम में सुधार सुझाएँ',
+  'Add back-off set': 'बैक-ऑफ़ सेट जोड़ें',
   'Back-off sets': 'बैक-ऑफ़ सेट',
   'Top sets': 'टॉप सेट',
   'Lighter by (%)': 'हल्का (%)',

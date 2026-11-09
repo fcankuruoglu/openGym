@@ -2151,6 +2151,7 @@ export default {
   'rehab': 'تأهيل',
   'Any type': 'أي نوع',
   'Suggest a fix for this exercise': 'اقترح تصحيحًا لهذا التمرين',
+  'Add back-off set': 'إضافة مجموعة تنازلية',
   'Back-off sets': 'مجموعات تنازلية',
   'Top sets': 'المجموعات العليا',
   'Lighter by (%)': 'أخف بنسبة (%)',

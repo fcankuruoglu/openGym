@@ -2107,6 +2107,7 @@ export default {
   'rehab': 'ฟื้นฟูร่างกาย',
   'Any type': 'ทุกประเภท',
   'Suggest a fix for this exercise': 'แนะนำการแก้ไขท่านี้',
+  'Add back-off set': 'เพิ่มเซ็ตลดน้ำหนัก',
   'Back-off sets': 'เซ็ตลดน้ำหนัก',
   'Top sets': 'เซ็ตหลัก',
   'Lighter by (%)': 'เบาลง (%)',

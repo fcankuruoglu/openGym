@@ -2099,6 +2099,7 @@ export default {
   'rehab': 'rehabilitáció',
   'Any type': 'Bármilyen típus',
   'Suggest a fix for this exercise': 'Javítás javaslata ehhez a gyakorlathoz',
+  'Add back-off set': 'Csökkenő sorozat hozzáadása',
   'Back-off sets': 'Csökkenő sorozatok',
   'Top sets': 'Fő sorozatok',
   'Lighter by (%)': 'Könnyebb (%)',

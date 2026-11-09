@@ -2096,6 +2096,7 @@ export default {
   'rehab': 'rehabilitasyon',
   'Any type': 'Tüm türler',
   'Suggest a fix for this exercise': 'Bu egzersiz için düzeltme öner',
+  'Add back-off set': 'Azalan set ekle',
   'Back-off sets': 'Azalan setler',
   'Top sets': 'Top set',
   'Lighter by (%)': 'Hafifletme (%)',

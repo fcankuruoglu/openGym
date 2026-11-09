@@ -2093,6 +2093,7 @@ export default {
   'rehab': 'реабілітація',
   'Any type': 'Будь-який тип',
   'Suggest a fix for this exercise': 'Запропонувати виправлення для цієї вправи',
+  'Add back-off set': 'Додати підхід зі зниженням ваги',
   'Back-off sets': 'Підходи зі зниженням ваги',
   'Top sets': 'Топ-підходи',
   'Lighter by (%)': 'Легше на (%)',

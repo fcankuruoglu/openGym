@@ -14,7 +14,7 @@
 // them it is the one-step-per-set sequence above, exactly as before.
 //
 // Imports nothing from history.js or progression.js — both import this module.
-import { isWarmupRow, isSideSet, syncSideAggregate } from './workout-model.js'
+import { isWarmupRow, isSideSet, syncSideAggregate, makeSideSet, WEIGHT_ORIGIN_MANUAL } from './workout-model.js'
 import { defaultIncrement, isAssisted } from './exercises.js'
 
 const round1 = v => Math.round(v * 10) / 10
@@ -118,4 +118,28 @@ export function applyBackoff(rows, step, shape) {
     }
     return row.done ? row : { ...row, ...load, ...(reps ? { r: reps } : {}) }
   })
+}
+
+/**
+ * The row "Add back-off set" appends in a session. A set added past the plan is extra work
+ * (progression.js readSession reads only the planned sets), so this only decides where it opens.
+ * In a session built with back-off sets it continues that sequence from the top set. Otherwise it
+ * is the exercise's back-off share (or 10%) lighter than the last work set, at its back-off reps
+ * (or the same reps), and kept as typed so editing the top set does not lift it back up.
+ */
+export function nextBackoffRow(rows, target, unit) {
+  const work = rows.filter(r => !isWarmupRow(r))
+  const last = work[work.length - 1]
+  if (!last) return null
+  const loadOf = r => Number(isSideSet(r) ? r.sides.L.w : r.w) || 0
+  const repsOf = r => (isSideSet(r) ? (Number(r.sides.L.r) || 0) * 2 : Number(r.r) || 0)
+  const planned = Number(target?.backoffStep) || 0
+  const own = backoffShapeOf(target)
+  const step = planned || (target?.inc > 0 ? target.inc : defaultIncrement(target?.id, unit))
+  const w = planned
+    ? backoffAt(loadOf(work[0]), Math.max(work.length, own.tops), step, own)
+    : backoffAt(loadOf(last), 1, step, { tops: 1, pct: own.pct || 10 })
+  const r = own.reps || repsOf(last) || Number(target?.reps) || 0
+  const row = isSideSet(last) ? makeSideSet({ w, r }) : { w, r, done: false }
+  return planned ? row : { ...row, weightOrigin: WEIGHT_ORIGIN_MANUAL }
 }

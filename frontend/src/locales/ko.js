@@ -2096,6 +2096,7 @@ export default {
   'rehab': '재활',
   'Any type': '모든 유형',
   'Suggest a fix for this exercise': '이 운동 수정 제안하기',
+  'Add back-off set': '백오프 세트 추가',
   'Back-off sets': '백오프 세트',
   'Top sets': '톱 세트',
   'Lighter by (%)': '가볍게 (%)',

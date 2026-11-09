@@ -2096,6 +2096,7 @@ export default {
   'rehab': '康复',
   'Any type': '所有类型',
   'Suggest a fix for this exercise': '为此动作提出修改建议',
+  'Add back-off set': '添加递减组',
   'Back-off sets': '递减组',
   'Top sets': '顶组',
   'Lighter by (%)': '减轻 (%)',

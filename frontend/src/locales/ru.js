@@ -2100,6 +2100,7 @@ export default {
   'rehab': 'реабилитация',
   'Any type': 'Любой тип',
   'Suggest a fix for this exercise': 'Предложить исправление для этого упражнения',
+  'Add back-off set': 'Добавить сет со снижением веса',
   'Back-off sets': 'Сеты со снижением веса',
   'Top sets': 'Топ-сеты',
   'Lighter by (%)': 'Легче на (%)',

@@ -2096,6 +2096,7 @@ export default {
   'rehab': 'rééducation',
   'Any type': 'Tout type',
   'Suggest a fix for this exercise': 'Suggérer une correction pour cet exercice',
+  'Add back-off set': 'Ajouter une série dégressive',
   'Back-off sets': 'Séries dégressives',
   'Top sets': 'Séries principales',
   'Lighter by (%)': 'Plus léger de (%)',
