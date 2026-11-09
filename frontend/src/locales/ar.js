@@ -2155,6 +2155,7 @@ export default {
   'Top sets': 'المجموعات العليا',
   'Lighter by (%)': 'أخف بنسبة (%)',
   'Back-off reps': 'تكرارات التنازل',
+  'Each set {0} lighter than the one before: the Step under Progression.': 'كل مجموعة أخف بـ {0} من السابقة: الخطوة في قسم التقدّم.',
   'Tempo': 'الإيقاع',
   'Tempo {0}': 'الإيقاع {0}',
   'top set {0}': 'المجموعة العليا {0}',

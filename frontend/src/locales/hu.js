@@ -2103,6 +2103,7 @@ export default {
   'Top sets': 'Fő sorozatok',
   'Lighter by (%)': 'Könnyebb (%)',
   'Back-off reps': 'Csökkenő ism.',
+  'Each set {0} lighter than the one before: the Step under Progression.': 'Minden sorozat {0}-mal könnyebb az előzőnél: a Haladás alatti lépés.',
   'Tempo': 'Tempó',
   'Tempo {0}': 'Tempó {0}',
   'top set {0}': 'fő sorozat {0}',

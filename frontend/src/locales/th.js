@@ -2111,6 +2111,7 @@ export default {
   'Top sets': 'เซ็ตหลัก',
   'Lighter by (%)': 'เบาลง (%)',
   'Back-off reps': 'ครั้งเซ็ตลด',
+  'Each set {0} lighter than the one before: the Step under Progression.': 'แต่ละเซ็ตเบากว่าเซ็ตก่อน {0}: ขั้นในส่วนความก้าวหน้า',
   'Tempo': 'จังหวะ',
   'Tempo {0}': 'จังหวะ {0}',
   'top set {0}': 'เซ็ตหลัก {0}',

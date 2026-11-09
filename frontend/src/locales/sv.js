@@ -2121,6 +2121,7 @@ export default {
   'Top sets': 'Toppset',
   'Lighter by (%)': 'Lättare med (%)',
   'Back-off reps': 'Back-off-reps',
+  'Each set {0} lighter than the one before: the Step under Progression.': 'Varje set {0} lättare än det förra: steget under Progression.',
   'Tempo': 'Tempo',
   'Tempo {0}': 'Tempo {0}',
   'top set {0}': 'toppset {0}',

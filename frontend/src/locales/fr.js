@@ -2100,6 +2100,7 @@ export default {
   'Top sets': 'Séries principales',
   'Lighter by (%)': 'Plus léger de (%)',
   'Back-off reps': 'Reps dégressives',
+  'Each set {0} lighter than the one before: the Step under Progression.': 'Chaque série {0} plus légère que la précédente : le pas sous Progression.',
   'Tempo': 'Tempo',
   'Tempo {0}': 'Tempo {0}',
   'top set {0}': 'série principale {0}',

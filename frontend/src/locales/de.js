@@ -2120,6 +2120,7 @@ export default {
   'Top sets': 'Top-Sätze',
   'Lighter by (%)': 'Leichter um (%)',
   'Back-off reps': 'Back-off-Wdh.',
+  'Each set {0} lighter than the one before: the Step under Progression.': 'Jeder Satz {0} leichter als der vorige: der Schritt unter Progression.',
   'Tempo': 'Tempo',
   'Tempo {0}': 'Tempo {0}',
   'top set {0}': 'Top-Satz {0}',

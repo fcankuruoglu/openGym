@@ -2191,6 +2191,7 @@ export default {
   'Top sets': 'টপ সেট',
   'Lighter by (%)': 'কম ওজন (%)',
   'Back-off reps': 'ব্যাক-অফ রেপ',
+  'Each set {0} lighter than the one before: the Step under Progression.': 'প্রতিটি সেট আগেরটির চেয়ে {0} হালকা: অগ্রগতির নিচের ধাপ।',
   'Tempo': 'টেম্পো',
   'Tempo {0}': 'টেম্পো {0}',
   'top set {0}': 'টপ সেট {0}',

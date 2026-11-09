@@ -2100,6 +2100,7 @@ export default {
   'Top sets': 'Serie top',
   'Lighter by (%)': 'Più leggero del (%)',
   'Back-off reps': 'Rip. a scalare',
+  'Each set {0} lighter than the one before: the Step under Progression.': 'Ogni serie {0} più leggera della precedente: il passo sotto Progressione.',
   'Tempo': 'Tempo',
   'Tempo {0}': 'Tempo {0}',
   'top set {0}': 'serie top {0}',

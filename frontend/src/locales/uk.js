@@ -2097,6 +2097,7 @@ export default {
   'Top sets': 'Топ-підходи',
   'Lighter by (%)': 'Легше на (%)',
   'Back-off reps': 'Повтори зниження',
+  'Each set {0} lighter than the one before: the Step under Progression.': 'Кожен підхід на {0} легший за попередній: крок у розділі Прогресія.',
   'Tempo': 'Темп',
   'Tempo {0}': 'Темп {0}',
   'top set {0}': 'топ-підхід {0}',

@@ -2104,6 +2104,7 @@ export default {
   'Top sets': 'Топ-сеты',
   'Lighter by (%)': 'Легче на (%)',
   'Back-off reps': 'Повторы снижения',
+  'Each set {0} lighter than the one before: the Step under Progression.': 'Каждый сет на {0} легче предыдущего: шаг в разделе Прогрессия.',
   'Tempo': 'Темп',
   'Tempo {0}': 'Темп {0}',
   'top set {0}': 'топ-сет {0}',

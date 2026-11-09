@@ -2,7 +2,7 @@
 // one step lighter, and the sequence only moves up when every planned set reached its target.
 import { describe, it, expect } from 'vitest'
 import { isBackoff, backoffAt, backoffWeights, applyBackoff, backoffShapeOf, backoffShapeFields } from './backoff.js'
-import { buildSessionEntries } from './session-start.js'
+import { buildSessionEntries, buildSessionEntry } from './session-start.js'
 import { readSession, nextPrescription } from './progression.js'
 import { cascadeWeight } from './history.js'
 import { buildPlanBundle, parsePlan } from './plan-share.js'
@@ -251,6 +251,15 @@ describe('top sets and a back-off by share', () => {
     expect(work(empty).map(s => s.r)).toEqual([8, 8, 10])
     const typed = cascadeWeight(empty.sets, empty.sets.indexOf(work(empty)[0]), 60, undefined, empty.target.backoffStep, backoffShapeOf(empty.target))
     expect(work({ sets: typed }).slice(1).map(s => [s.w, s.r])).toEqual([[60, 8], [50, 10]])
+  })
+  it('applies to an exercise added freestyle, and a back-off switched off leaves no step behind', () => {
+    const st = { unit: 'kg', exWeights: {}, routines: [], workouts: [] }
+    const free = buildSessionEntry(st, LIFT, cfg, null, null)
+    expect(work(free).map(s => [s.w, s.r])).toEqual([[60, 8], [60, 8], [50, 10]])
+    expect(free.target.backoffStep).toBe(2.5)
+    const off = buildSessionEntry(st, LIFT, { ...cfg, backoff: undefined, backoffStep: 2.5 }, null, null)
+    expect(work(off).map(s => s.w)).toEqual([60, 60, 60])
+    expect(off.target.backoffStep).toBeUndefined()
   })
   it('cascades a top set edit over the sets under it, and a back-off edit onto the ones after', () => {
     const rows = [{ w: 60, r: 8 }, { w: 60, r: 8 }, { w: 50, r: 10 }, { w: 50, r: 10 }]

@@ -2100,6 +2100,7 @@ export default {
   'Top sets': '톱 세트',
   'Lighter by (%)': '가볍게 (%)',
   'Back-off reps': '백오프 반복',
+  'Each set {0} lighter than the one before: the Step under Progression.': '각 세트는 이전보다 {0} 가볍습니다: 진행 아래의 단계.',
   'Tempo': '템포',
   'Tempo {0}': '템포 {0}',
   'top set {0}': '톱 세트 {0}',
