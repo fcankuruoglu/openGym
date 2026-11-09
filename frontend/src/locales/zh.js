@@ -2100,6 +2100,7 @@ export default {
   'Top sets': '顶组',
   'Lighter by (%)': '减轻 (%)',
   'Back-off reps': '递减组次数',
+  'Each set {0} lighter than the one before: the Step under Progression.': '每组比上一组轻 {0}：进度下的步长。',
   'Tempo': '节奏',
   'Tempo {0}': '节奏 {0}',
   'top set {0}': '顶组 {0}',

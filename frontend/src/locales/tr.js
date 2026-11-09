@@ -2100,6 +2100,7 @@ export default {
   'Top sets': 'Top set',
   'Lighter by (%)': 'Hafifletme (%)',
   'Back-off reps': 'Azalan set tekrarı',
+  'Each set {0} lighter than the one before: the Step under Progression.': 'Her set bir öncekinden {0} hafif: İlerleme altındaki Adım.',
   'Tempo': 'Tempo',
   'Tempo {0}': 'Tempo {0}',
   'top set {0}': 'top set {0}',

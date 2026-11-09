@@ -2063,12 +2063,6 @@ function ProgressionFields({ ex, mode, c, setC, routine, unit, perSide, bw, fall
   const backoff = canBackoff && c.backoff === true
   const weightless = weightlessOf(c, mode, bw)
   const invalid = !progressionStepIsValid(inc, active, backoff, weightless)
-  // "26 → 24 → 22 kg": what the sets will open at, from the weight and step typed above.
-  const workSets = Math.max(1, Math.round(c.sets) || 1)
-  const shape = backoffShapeOf(c)
-  const preview = backoff && c.weight > 0 && inc > 0
-    ? backoffWeights(c.weight, workSets, inc, shape).map(fmtNum).join(' → ') + ' ' + unit
-    : ''
   const stride = mode === 'reps' && perSide ? 2 : 1
   const range = climbsRange(active) ? normalizeRepRange(c.reps, c.repsMin, stride) : null
   const epleyEligible = mode === 'reps' && !isBw({ ...c, id: ex.id }) && (active === 'linear' || climbsRange(active))
@@ -2126,31 +2120,44 @@ function ProgressionFields({ ex, mode, c, setC, routine, unit, perSide, bw, fall
     {invalid && <div className="small" role="alert" style={{ color: 'var(--red)', marginTop: -10, marginBottom: 18 }}>
       {t('Enter a positive step to use this progression rule.')}
     </div>}
-    {/* Off by default and only written when on, so every plan saved before it stays the shape
-        it was. The step is the one above: the gear's own increment, set once per exercise. */}
-    {canBackoff && <>
-      <div className="sect-b" style={{ marginBottom: 8 }}>
-        <Row icon="steps" iconTint="var(--acc)" title={t('Back-off sets')}
-          subtitle={backoff && (shape.tops > 1 || shape.pct) ? t('The top sets stay at the weight above, the rest are lighter.') : t('Each set one step lighter than the one before. The weight above is the first set.')}>
-          <Switch checked={backoff} onChange={v => setC(x => ({ ...x, backoff: v || undefined }))} />
-        </Row>
-      </div>
-      {/* "2 top sets + 1 back-off": how many sets stay at the top weight, how much lighter the
-          rest are (0 keeps one step per set) and their own reps (0 keeps the plan's). */}
-      {backoff && <div className="row cfgrow" style={{ marginBottom: 12 }}>
-        <Stepper label={t('Top sets')} value={shape.tops} step={1} min={1} max={Math.max(1, workSets - 1)} decimal={false}
-          onChange={v => setC(x => ({ ...x, backoffTops: v > 1 ? v : undefined }))} />
-        <Stepper label={t('Lighter by (%)')} value={shape.pct} step={5} min={0} max={BACKOFF_PCT_MAX} decimal={false}
-          onChange={v => setC(x => ({ ...x, backoffPct: v > 0 ? v : undefined }))} />
-        <Stepper label={t('Back-off reps')} value={shape.reps} step={1} min={0} decimal={false}
-          onChange={v => setC(x => ({ ...x, backoffReps: v > 0 ? v : undefined }))} />
-      </div>}
-      <div className="small dim" style={{ marginBottom: 18 }}>
-        {backoff
-          ? (preview ? t('Sets open at {0}. The first set goes up when every set reaches its reps, and the rest follow it.', preview) : t('The first set goes up when every set reaches its reps, and the rest follow it.'))
-          : t('All sets at the same weight.')}
-      </div>
-    </>}
+  </>
+}
+
+// Back-off sets (lib/backoff.js): a set shape like a pyramid or a drop-set, so it sits with them.
+// Off by default and only written when on, so every plan saved before it stays the shape it was.
+// One step per set uses the exercise's Step (under Progression): the gear's own increment.
+function BackoffFields({ ex, mode, c, setC, unit, bw }) {
+  if (!backoffOffered(c, mode, ex, bw)) return null
+  const inc = progressionStepOf(c, mode, ex, unit)
+  const backoff = c.backoff === true
+  // "26 → 24 → 22 kg": what the sets will open at, from the weight and step typed in.
+  const workSets = Math.max(1, Math.round(c.sets) || 1)
+  const shape = backoffShapeOf(c)
+  const preview = backoff && c.weight > 0 && inc > 0
+    ? backoffWeights(c.weight, workSets, inc, shape).map(fmtNum).join(' → ') + ' ' + unit
+    : ''
+  return <>
+    <div className="sect-b" style={{ marginBottom: 8 }}>
+      <Row icon="steps" iconTint="var(--acc)" title={t('Back-off sets')}
+        subtitle={backoff && (shape.tops > 1 || shape.pct) ? t('The top sets stay at the weight above, the rest are lighter.') : backoff && inc > 0 ? t('Each set {0} lighter than the one before: the Step under Progression.', fmtNum(inc) + ' ' + unit) : t('Each set one step lighter than the one before. The weight above is the first set.')}>
+        <Switch checked={backoff} onChange={v => setC(x => ({ ...x, backoff: v || undefined }))} />
+      </Row>
+    </div>
+    {/* "2 top sets + 1 back-off": how many sets stay at the top weight, how much lighter the
+        rest are (0 keeps one step per set) and their own reps (0 keeps the plan's). */}
+    {backoff && <div className="row cfgrow" style={{ marginBottom: 12 }}>
+      <Stepper label={t('Top sets')} value={shape.tops} step={1} min={1} max={Math.max(1, workSets - 1)} decimal={false}
+        onChange={v => setC(x => ({ ...x, backoffTops: v > 1 ? v : undefined }))} />
+      <Stepper label={t('Lighter by (%)')} value={shape.pct} step={5} min={0} max={BACKOFF_PCT_MAX} decimal={false}
+        onChange={v => setC(x => ({ ...x, backoffPct: v > 0 ? v : undefined }))} />
+      <Stepper label={t('Back-off reps')} value={shape.reps} step={1} min={0} decimal={false}
+        onChange={v => setC(x => ({ ...x, backoffReps: v > 0 ? v : undefined }))} />
+    </div>}
+    <div className="small dim" style={{ marginBottom: 18 }}>
+      {backoff
+        ? (preview ? t('Sets open at {0}. The first set goes up when every set reaches its reps, and the rest follow it.', preview) : t('The first set goes up when every set reaches its reps, and the rest follow it.'))
+        : t('All sets at the same weight.')}
+    </div>
   </>
 }
 
@@ -2600,6 +2607,18 @@ function ExConfig({ ex, existing, onSave, onDelete, onReplace, close, routine, i
           : { ...x, ...flatFromPyramid(x.pyramid), pyramidDraft: x.pyramid, pyramid: undefined }))} />
       </Row>}
     </div>}
+    {mode === 'reps' && !pyramid && <BackoffFields ex={ex} mode={mode} c={c} setC={setC} unit={st.unit} bw={bw} />}
+    {/* How each rep is lifted and how hard the top set should feel (lib/cues.js): both optional. */}
+    {!cardio && <div className="row cfgrow" style={{ marginBottom: 18 }}>
+      <label className="stp-w"><span className="stp-l">{t('Tempo')}</span>
+        <TextField className="cue-tempo" inputMode="text" maxLength={4} placeholder="2101" value={c.tempo || ''} aria-label={t('Tempo')}
+          onChange={e => setC(x => ({ ...x, tempo: e.target.value.toUpperCase().replace(/[^0-9X]/g, '') || undefined }))} />
+      </label>
+      {mode === 'reps' && <Stepper label={effortOf(st) === 'rir' ? t('Top set RIR') : t('Top set RPE')} value={topRpeOf(c)} step={0.5}
+        min={0} max={TOP_RPE_MAX} display={topRpeOf(c) ? (effortOf(st) === 'rir' ? fmtNum(10 - topRpeOf(c)) : null) : t('Off')}
+        onStep={(v, step, dir) => { if (!v) return dir > 0 ? 8 : 0; const n = v + (effortOf(st) === 'rir' ? -dir : dir) * step; return n < TOP_RPE_MIN || n > TOP_RPE_MAX ? (dir < 0 ? 0 : v) : n }}
+        onChange={v => setC(x => ({ ...x, topRpe: v >= TOP_RPE_MIN ? v : undefined }))} />}
+    </div>}
     {/* A stepper is too wide to sit in a list row next to a label — it squeezes the text to
         one word per line — so added weight gets the same full-width treatment as sets and
         reps, with its explanation underneath. */}
@@ -2682,17 +2701,6 @@ function ExConfig({ ex, existing, onSave, onDelete, onReplace, close, routine, i
     {pyramid
       ? <div className="small dim" style={{ marginBottom: 18 }}>{t('Weight is up to you: pyramid sets are not progressed automatically.')}</div>
       : <ProgressionFields ex={ex} mode={mode} c={c} setC={setC} routine={routine} unit={st.unit} perSide={perSide} bw={bw} fallback={profileRule(st)} freestyle={routine ? false : freestyle} />}
-    {/* How each rep is lifted and how hard the top set should feel (lib/cues.js): both optional. */}
-    {!cardio && <div className="row cfgrow" style={{ marginBottom: 18 }}>
-      <label className="stp-w"><span className="stp-l">{t('Tempo')}</span>
-        <TextField className="cue-tempo" inputMode="text" maxLength={4} placeholder="2101" value={c.tempo || ''} aria-label={t('Tempo')}
-          onChange={e => setC(x => ({ ...x, tempo: e.target.value.toUpperCase().replace(/[^0-9X]/g, '') || undefined }))} />
-      </label>
-      {mode === 'reps' && <Stepper label={effortOf(st) === 'rir' ? t('Top set RIR') : t('Top set RPE')} value={topRpeOf(c)} step={0.5}
-        min={0} max={TOP_RPE_MAX} display={topRpeOf(c) ? (effortOf(st) === 'rir' ? fmtNum(10 - topRpeOf(c)) : null) : t('Off')}
-        onStep={(v, step, dir) => { if (!v) return dir > 0 ? 8 : 0; const n = v + (effortOf(st) === 'rir' ? -dir : dir) * step; return n < TOP_RPE_MIN || n > TOP_RPE_MAX ? (dir < 0 ? 0 : v) : n }}
-        onChange={v => setC(x => ({ ...x, topRpe: v >= TOP_RPE_MIN ? v : undefined }))} />}
-    </div>}
     <textarea className="input" rows={3} maxLength={500} style={{ marginBottom: 18 }}
       placeholder={t('Note (optional): loading cues, "bar only, then +1 plate/side each set", anything worth remembering')}
       value={c.note || ''} onChange={e => setC(x => ({ ...x, note: e.target.value }))} />

@@ -2100,6 +2100,7 @@ export default {
   'Top sets': 'टॉप सेट',
   'Lighter by (%)': 'हल्का (%)',
   'Back-off reps': 'बैक-ऑफ़ रेप',
+  'Each set {0} lighter than the one before: the Step under Progression.': 'हर सेट पिछले से {0} हल्का: प्रगति के नीचे वाला स्टेप।',
   'Tempo': 'टेम्पो',
   'Tempo {0}': 'टेम्पो {0}',
   'top set {0}': 'टॉप सेट {0}',

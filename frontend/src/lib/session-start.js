@@ -257,9 +257,15 @@ function freestyleEntry(st, id, cfg) {
   // buildPlannedEntry does for a planned exercise (lib/dumbbells.js).
   const step = modeOf(full) === 'reps' ? (ownedWeightsFor(st, full) || weightIncrement(full, st.unit)) : defaultIncrement(id, st.unit)
   const block = ['auto', 'own'].includes(warmupSource(st, full).kind)
-  const rows = applyIntensifierPlan(buildSets(historyAs(past, id, dbLoadFor(st, full)), block ? { ...full, warmupSets: 0 } : full, { step, preferLast: true }), full, dropGrid(st, full))
+  // Back-off sets step down from the top set here too, as buildPlannedEntry does, and the step is
+  // stamped on the session so the card's heading, a typed top set and the read-back follow it.
+  const backoffStep = modeOf(full) === 'reps' && backoffStepOf(full, st.unit) ? weightIncrement(full, st.unit) : 0
+  const built = buildSets(historyAs(past, id, dbLoadFor(st, full)), block ? { ...full, warmupSets: 0 } : full, { step, preferLast: true })
+  const rows = applyIntensifierPlan(backoffStep ? applyBackoff(built, backoffStep, backoffShapeOf(full)) : built, full, dropGrid(st, full))
   const sets = block ? withWarmupBlock(st, full, rows, { grid: dropGrid(st, full), floor: barFloor(st, id), unit: st.unit }) : rows
-  return { target: withMeaning(st, cfg, id), plan: null, sets }
+  // A freestyle cfg is last time's target (history.js freestyleConfig): its old step is not today's.
+  const { backoffStep: _last, ...target } = withMeaning(st, cfg, id)
+  return { target: backoffStep ? { ...target, backoffStep } : target, plan: null, sets }
 }
 
 // Returns a bare array of session entries. "Excluded from progression" is per-entry now

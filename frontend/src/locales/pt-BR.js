@@ -4,6 +4,7 @@
 import pt from './pt.js'
 
 export const PT_BR_OVERRIDES = {
+  'Each set {0} lighter than the one before: the Step under Progression.': 'Cada série {0} mais leve que a anterior: o passo em Progressão.',
   'Tempo': 'Tempo',
   'Tempo {0}': 'Tempo {0}',
   'top set {0}': 'série principal {0}',
